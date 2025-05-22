@@ -1,4 +1,11 @@
-// vectorized function to sample patient daily movement patterns
+//' @name sample_day_mvts_cpp_seed
+//' @title Determine number of patient mvts for the day.
+//' @description function to randomly sample patient daily movement patterns
+//' @param los Vector of patient los for the visit,
+//' @param cur_room_type vector of patients' current room type (icu/non).
+//' @param seed value of seed to be passed into the rcpp.
+//' @return returns character vector with the number of "icu,non" movements
+//' for the patients' upcoming day.
 
 #include <RcppArmadillo.h>
 #include <RcppArmadilloExtensions/sample.h>
@@ -13,6 +20,7 @@ using namespace arma;
 // [[Rcpp::export]]
 CharacterVector sample_day_mvts_cpp_seed(IntegerVector los, IntegerVector cur_room_type, unsigned int seed) {
   int n = los.size();
+  // number of mvts for the day "icu,non"
   CharacterVector mvt_opt_char = {"0,0", "0,1", "0,2", "0,3", "1,0", "1,1", "1,2", "2,0", "2,1", "3,0"};
   IntegerVector mvt_opt = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   // Create a vector to store assigned rooms

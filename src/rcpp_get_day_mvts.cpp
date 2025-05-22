@@ -1,7 +1,21 @@
-#include <RcppArmadillo.h>
-#include <algorithm>
+//' @name get_day_mvts_cpp
+//' @title Determine the time/location for each patient's daily movements.
+//' @description Check how many patients from each facility need to go to the queue.
+//' @param ids vector of patients to get daily movement pattern for
+//' @param icu_num vector of equal length to ids with the number of icu movements
+//' for each patient
+//' @param non_num vector of equal length to ids with the number of non-icu
+//'  movements for each patient
+//' @param end_loc vector of equal length to ids, indicating whether each
+//' patient ends in the icu or non-icu
+//' @return returns a data frame with one row per patient movement in the day.
+//' Columns include patient id, room type (icu or non), and time block for
+//' movement.
 
 // [[Rcpp::depends(RcppArmadillo)]]
+
+#include <RcppArmadillo.h>
+#include <algorithm>
 
 using namespace Rcpp;
 using namespace std;

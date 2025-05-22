@@ -1,3 +1,10 @@
+//' @name adjust_for_queue_l
+//' @title Adjust admit queue list
+//' @description Check how many patients from each facility need to go to the queue.
+//' @param patients List of patients at each facility
+//' @param q_vec number in queue total
+//' @return adjusted queue list.
+
 #include <Rcpp.h>
 #include <numeric>
 #include <iterator>
@@ -5,14 +12,12 @@
 using namespace Rcpp;
 using namespace std;
 
-
-IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
+IntegerVector adjust_for_queue_i(IntegerVector num_pat, int q_n) {
   // int n = x.size();
   int q_fr = 0;
   // output vector
   IntegerVector num_pat_adj(4);
   num_pat_adj = num_pat;
-
   // which risk levels is queue from?
   if (q_n <= num_pat[0]) {
     q_fr = 0;
@@ -36,9 +41,7 @@ IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
     }
     j++;
   }
-
   return num_pat_adj;
-
 }
 
 // [[Rcpp::export]]
@@ -51,7 +54,7 @@ List adjust_for_queue_l(List patients, IntegerVector q_vec) {
   for(int i = 0; i < n; i++) {
     IntegerVector pat_i = patients[i];
     int q_i = q_vec[i];
-    IntegerVector temp = adjust_for_queue(pat_i, q_i);
+    IntegerVector temp = adjust_for_queue_i(pat_i, q_i);
     num_pat_adj_l[i] = temp;
   }
   return num_pat_adj_l;

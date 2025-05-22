@@ -1,3 +1,14 @@
+//' @name move_rooms_cpp_seed
+//' @title Move patient rooms
+//' @description Move patients from one room to another (similar to assign
+//' rooms function). Designed to deal with one facility at a time.
+//' @param pat_rm_type Data frame of patients and the room type they are to go to.
+//' @param icu vector of number of icu rooms available at each hospital
+//' @param non vector of number of non-icu rooms available at each hospital
+//' @param seed seed to be passed in to rcpp
+//' @return returns data frame with one column for patient and a second column
+//' for the room number to which they are assigned.
+
 #include <Rcpp.h>
 #include <numeric>
 #include <iterator>

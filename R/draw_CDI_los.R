@@ -19,9 +19,7 @@
 #'
 #'
 #'
-CDI_los_dist_mdc_tran6days <- readRDS(paste0(getwd(), "/Data/CDI_los_dist_mdc_tran6days.RDS"))
-
-
+# CDI_los_dist_mdc_tran6days <- readRDS(paste0(getwd(), "/Data/CDI_los_dist_mdc_tran6days.RDS"))
 draw_CDI_los <- function(dist = CDI_los_dist_mdc_tran6days, current_day, transfer, md_cat, hcup_los, hosp_id) {
   ## distribution: CDI_los_dist_mdc_tran
   max_los_facil <- hospid_max %>%

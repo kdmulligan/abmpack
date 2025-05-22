@@ -1,10 +1,17 @@
+//' @name num_in_q_by_risk
+//' @title Adjust admit patient list for the number of patients going to the queue.
+//' @description Check how many patients from each facility need to go to the queue.
+//' @param risks_beds Data frame with columns: hospital id, number of patients
+//' at each risk level 1-4, number of icu beds, number of non-icu beds.
+//' @return List with length equal to the number of facilities with the new
+//' number of patients at each risk level after sending the proper number of patients
+//' to the queue.
+
 #include <Rcpp.h>
 #include <numeric>
 #include <iterator>
 using namespace Rcpp;
 using namespace std;
-
-
 
 // [[Rcpp::export]]
 IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
@@ -13,7 +20,6 @@ IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
   // output vector
   IntegerVector num_pat_adj(4);
   num_pat_adj = num_pat;
-
   // which risk levels is queue from?
   if (q_n <= num_pat[0]) {
     q_fr = 0;
@@ -37,19 +43,17 @@ IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
     }
     j++;
   }
-
   return num_pat_adj;
-
 }
 
 
-// [[Rcpp::export]]
-// Function to sample n elements from a vector without replacement
-IntegerVector sub_vec(IntegerVector vec_1, IntegerVector vec_2) {
-  IntegerVector result(vec_1.size());
-  result = vec_1 - vec_2;
-  return result;
-}
+// // [[Rcpp::export]]
+// // Function to sample n elements from a vector without replacement
+// IntegerVector sub_vec(IntegerVector vec_1, IntegerVector vec_2) {
+//   IntegerVector result(vec_1.size());
+//   result = vec_1 - vec_2;
+//   return result;
+// }
 
 // [[Rcpp::export]]
 List num_in_q_by_risk(DataFrame risks_beds) {

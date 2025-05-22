@@ -1,3 +1,16 @@
+//' @name assign_rooms_cpp_seed
+//' @title Assign rooms to patients
+//' @description Randomly assign patients to hospital rooms with rcpp seed.
+//' Designed to deal with one facility at a time.
+//' @param pat_risks data frame where each row is a facility and four columns
+//' one for each risk level to hold the number of patients at each risk level
+//' per hospital
+//' @param icu vector of number of icu rooms available at each hospital
+//' @param non vector of number of non-icu rooms available at each hospital
+//' @param seed seed to be passed in to rcpp
+//' @return returns data frame with one column for patient and a second column
+//' for the room number to which they are assigned.
+
 #include <Rcpp.h>
 #include <numeric>
 #include <iterator>
