@@ -4,7 +4,10 @@
 \alias{update_available_rooms}
 \title{Update list of available rooms based on occupancy}
 \usage{
-update_available_rooms()
+update_available_rooms(rm_list)
+}
+\arguments{
+\item{rm_list}{list object with room info}
 }
 \value{
 Data frame with number of rows equal to the number of patient moves per day

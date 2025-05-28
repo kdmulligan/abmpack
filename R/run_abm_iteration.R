@@ -754,7 +754,7 @@ run_abm_iteration <- function(n_days = 72,
       # queue_viz_keys_df
 
       # 7d.1: get available rooms per facility
-      update_available_rooms()
+      update_available_rooms(rm_list = room_list)
       ## R func that updates environ automatically, list of vectors of avail rooms for each facility
 
       ## check if any patients are dead
@@ -957,7 +957,7 @@ run_abm_iteration <- function(n_days = 72,
 
       ## 7e: ADMIT PART 2: admit new patients from HCUP #######################
       # 7e.1: new hcup pat - get available rooms
-      update_available_rooms()  ## updates envir automatically
+      update_available_rooms(rm_list = room_list)  ## updates envir automatically
 
       ## first time patients
       first_viz_pats = uniq_pat_dat |>
@@ -1202,7 +1202,7 @@ run_abm_iteration <- function(n_days = 72,
         idx_move_rm = (room_list$occup@i + 1)[which(room_list$occup@x %in% pat_to_move$patid)]
         room_list$occup[idx_move_rm] = 0L
         ## update available rooms
-        update_available_rooms()
+        update_available_rooms(rm_list = room_list)
         ## draw new rooms for moving patients
         fac_w_move = unique(pat_to_move$hcup_id)
         new_rooms <- vector("list", length(fac_w_move))
