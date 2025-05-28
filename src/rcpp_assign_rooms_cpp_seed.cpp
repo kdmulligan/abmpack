@@ -19,8 +19,8 @@
 using namespace Rcpp;
 using namespace std;
 
-
 // [[Rcpp::export]]
+
 Rcpp::DataFrame assign_rooms_cpp_seed(DataFrame pat_risks, SEXP icu, SEXP non, unsigned int seed) {
   // `pat` df columns are visitlink, ahaid, adrgriskmortality
   int n = pat_risks.nrow();
