@@ -272,7 +272,7 @@ run_abm_iteration <- function(n_days = 72,
       filter(hcup_id == hcup_id_vec[i]) |>
       arrange(desc(adrgriskmortality)) |>
       dplyr::select(patid, adrgriskmortality) |>
-      assign_rooms_cpp_seed(
+      rcpp_assign_rooms_cpp_seed(
         pat_risks = _,
         icu = icu_avail[[as.character(hcup_id_vec[i])]],
         non = non_avail[[as.character(hcup_id_vec[i])]],
@@ -871,7 +871,7 @@ run_abm_iteration <- function(n_days = 72,
           filter(hcup_id == hcup_id_vec[i]) |>
           arrange(desc(adrgriskmortality)) |>
           select(patid, adrgriskmortality) |>
-          assign_rooms_cpp_seed(
+          rcpp_assign_rooms_cpp_seed(
             pat_risks = _,
             icu = icu_avail[[as.character(hcup_id_vec[i])]],
             non = non_avail[[as.character(hcup_id_vec[i])]],
@@ -1075,7 +1075,7 @@ run_abm_iteration <- function(n_days = 72,
             1,
             adrgriskmortality
           )) |>
-          assign_rooms_cpp_seed(
+          rcpp_assign_rooms_cpp_seed(
             pat_risks = _,
             icu = icu_avail[[as.character(hcup_id_vec[i])]],
             non = non_avail[[as.character(hcup_id_vec[i])]],
