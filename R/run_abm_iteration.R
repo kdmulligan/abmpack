@@ -161,7 +161,7 @@ run_abm_iteration <- function(n_days = 72,
     contam_next = Matrix(0L, n_rooms, 1),
     occup = Matrix(0L, n_rooms, 1)
   )
-  print(str(room_list))
+  # print(str(room_list))
   ## patient list
   n_pat = nrow(uniq_pat_dat)
   pat_list = list(
