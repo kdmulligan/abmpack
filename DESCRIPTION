@@ -15,7 +15,8 @@ Imports:
     Rcpp,
     RcppArmadillo,
     readr,
-    tidyr
+    tidyr,
+    Matrix
 LinkingTo: 
     Rcpp,
     RcppArmadillo
