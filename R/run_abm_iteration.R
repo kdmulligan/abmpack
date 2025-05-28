@@ -37,6 +37,7 @@ utils::globalVariables(
 #' @importFrom stats rbinom runif rweibull rpois
 #' @importFrom truncnorm rtruncnorm
 #' @importFrom triangle rtriangle
+#' @export
 
 run_abm_iteration <- function(n_days = 72,
                               t_symp_room = 0.0005, t_hcw_room = 0.0005,

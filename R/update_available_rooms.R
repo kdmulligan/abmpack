@@ -8,6 +8,7 @@ utils::globalVariables(c("room_list", "hcup_id_vec"))
 #' it replaces icu_avail and non_avail in the environment.
 #'
 #' @return Data frame with number of rows equal to the number of patient moves per day
+#' @export
 
 update_available_rooms = function() {
   avail_idx = room_list$rid_uniq[!(room_list$rid_uniq) %in% (room_list$occup@i + 1)]

@@ -19,6 +19,7 @@ utils::globalVariables(
 #' @importFrom dplyr rename filter left_join mutate relocate select rowwise ungroup bind_rows
 #' @importFrom tidyr separate_wider_delim replace_na
 #' @importFrom stringr str_detect str_c
+#' @export
 
 add_supp_hcup_dat <- function(base_dat, supp_dat) {
   ## data with internal transfers (>1 key)

@@ -12,6 +12,7 @@ utils::globalVariables(c("susceptible", "latent", "asymptomatic", "incubation",
 #' @return logical vector
 #' @importFrom tibble tibble
 #' @importFrom dplyr mutate if_else
+#' @export
 
 pat_in_one_state = function(pats) {
   states = tibble(

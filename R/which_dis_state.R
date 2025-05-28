@@ -9,6 +9,7 @@ utils::globalVariables(c("susceptible", "latent", "asymptomatic", "incubation",
 #' @param pats vector of patient ids of interest
 #'
 #' @return character vector of disease states
+#' @export
 
 which_dis_state = function(pats) {
   which_sus = which(pats %in% (susceptible@i + 1))

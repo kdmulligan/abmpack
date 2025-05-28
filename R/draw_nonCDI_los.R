@@ -15,6 +15,7 @@ utils::globalVariables(c("noCDI_los_dist_mdc_tran6days"))
 #' @return Returns a integer (or vector, function is vectorized) with the new LOS
 #'
 #' @importFrom dplyr case_when
+#' @export
 
 draw_nonCDI_los <- function(dist = noCDI_los_dist_mdc_tran6days, transfer, md_cat){
   ## distribution: noCDI_los_dist_mdc_tran

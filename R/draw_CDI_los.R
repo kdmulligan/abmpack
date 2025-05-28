@@ -21,6 +21,7 @@ utils::globalVariables(
 #' @return Returns a integer (or vector, function is vectorized) as the new LOS
 #'
 #' @importFrom dplyr filter pull case_when
+#' @export
 #'
 # CDI_los_dist_mdc_tran6days <- readRDS(paste0(getwd(), "/Data/CDI_los_dist_mdc_tran6days.RDS"))
 
