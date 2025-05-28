@@ -20,6 +20,10 @@ update_available_rooms = function() {
     icu_avail_temp[[j]] <- room_list$rid_uniq[(room_list$hcup_id == hcup_id_vec[j]) & (room_list$icu == 1) & (room_list$rid_uniq %in% avail_idx)]
     non_avail_temp[[j]] <- room_list$rid_uniq[(room_list$hcup_id == hcup_id_vec[j]) & (room_list$icu == 0) & (room_list$rid_uniq %in% avail_idx)]
   }
-  assign("icu_avail", icu_avail_temp, envir = .GlobalEnv)
-  assign("non_avail", non_avail_temp, envir = .GlobalEnv)
+  ## original
+  # assign("icu_avail", icu_avail_temp, envir = .GlobalEnv)
+  # assign("non_avail", non_avail_temp, envir = .GlobalEnv)
+  ## parent envir
+  assign("icu_avail", icu_avail_temp, envir = parent.frame())
+  assign("non_avail", non_avail_temp, envir = parent.frame())
 }
