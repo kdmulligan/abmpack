@@ -1,4 +1,4 @@
-//' @name assign_rooms_cpp_seed
+//' @name rcpp_assign_rooms_cpp_seed
 //' @title Assign rooms to patients
 //' @description Randomly assign patients to hospital rooms with rcpp seed.
 //' Designed to deal with one facility at a time.
