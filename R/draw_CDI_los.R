@@ -1,3 +1,5 @@
+utils::globalVariables(
+  c("CDI_los_dist_mdc_tran6days", "hospid_max", "hcup_id", "max_los"))
 #### function 2: draw_CDI_los()
 #' @title draw CDI los based on current day during simulation
 #'
@@ -14,16 +16,18 @@
 #' transfer not last, transfer last
 #' @param md_cat major diagnostic category, 0-25
 #' @param hcup_los the patient's los in the HCUP data
+#' @param hosp_id hospital the patient is from
 #'
 #' @return Returns a integer (or vector, function is vectorized) as the new LOS
 #'
-#'
+#' @importFrom dplyr filter pull case_when
 #'
 # CDI_los_dist_mdc_tran6days <- readRDS(paste0(getwd(), "/Data/CDI_los_dist_mdc_tran6days.RDS"))
+
 draw_CDI_los <- function(dist = CDI_los_dist_mdc_tran6days, current_day, transfer, md_cat, hcup_los, hosp_id) {
   ## distribution: CDI_los_dist_mdc_tran
-  max_los_facil <- hospid_max %>%
-    filter(hcup_id == hosp_id) %>%
+  max_los_facil <- hospid_max |>
+    filter(hcup_id == hosp_id) |>
     pull(max_los)
   if(current_day == 0 & transfer == 0) {
     transfer = 1

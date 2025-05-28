@@ -1,3 +1,4 @@
+utils::globalVariables(c("noCDI_los_dist_mdc_tran6days"))
 #### function 3: draw_nonCDI_los()
 
 #' @title draw non-CDI los before simulation
@@ -7,13 +8,13 @@
 #' matching transfer/MDC distribution with days between 1-365
 #'
 #' @param dist a list object with los distributions by mdc and transfer type
-#' @param hcup_los the patient's los in the HCUP data
 #' @param transfer transfer type of the hospitalization: not a transfer,
 #' transfer not last, transfer last
 #' @param md_cat major diagnostic category, 0-25
 #'
 #' @return Returns a integer (or vector, function is vectorized) with the new LOS
 #'
+#' @importFrom dplyr case_when
 
 draw_nonCDI_los <- function(dist = noCDI_los_dist_mdc_tran6days, transfer, md_cat){
   ## distribution: noCDI_los_dist_mdc_tran

@@ -6,6 +6,9 @@
 \usage{
 pat_in_one_state(pats)
 }
+\arguments{
+\item{pats}{vector of patient ids of interest}
+}
 \value{
 logical vector
 }

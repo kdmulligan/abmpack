@@ -1,3 +1,42 @@
+utils::globalVariables(
+  c("hospid_max", "rooms", "uniq_pat_dat", "hcws", "hcup", "aday_sim", "hcup_id",
+    "adrgriskmortality", "patid", "los_rem_frday0", "days2next", "class_sim", "viz_num",
+    "subseq_tran_seg", "viz_key", "n", "risk_1", "risk_2", "risk_3", "risk_4", "fid", "time_block",
+    "room_type", "hcw_mvts", "day_counter", "rid", "hid", "total_sec", "rid_uniq", "hid_ss",
+    "hid_uniq", 'prop_soap_in', "prop_soap_out", "prob_contam_col", "prob_contam_contam",
+    "prob_contam_fr_patdis", "prob_room_nocontam_hcw_col", "prob_room_nocontam_hcw_contam",
+    "prob_contam", "prob_hcw_now_contam", "room_list", "hcup_id_vec"
+  )
+)
+
+#' @title Run one ABM simulation
+#' @description Take a input of parameters and indicators to run simulation by
+#'
+#' @param n_days number of days for the simulation
+#' @param t_symp_room transmission from symp pat to room prior value
+#' @param t_hcw_room transmission from hcw to room prior value
+#' @param t_room_hcw transmission from room to hcw prior value
+#' @param t_room_patge65 transmission from room to patient 65 or older prior value
+#' @param t_prob_room_contam_init probability a room is contam prior value
+#' @param l_poi_latent poisson lambda value for latent per prior value
+#' @param ind_col_pat_trans indicator for colonized patient transmission
+#' @param ind_asymp_pat_trans indicator for asymptomatic patient transmission
+#' @param ind_asymp_hcw_trans indicator for asymptomatic hcw transmission
+#' @param ind_recur_trans indicator for recurrent patient transmission
+#' @param ind_transfer_pat_trans indicator for transfer patient transmission
+#' @param SEED seed for the simulation
+#'
+#' @return numeric value with total number of observed cases
+#' @importFrom Matrix Matrix
+#' @importFrom tibble tibble
+#' @importFrom utils str
+#' @importFrom dplyr mutate if_else filter arrange desc bind_rows left_join pull
+#' select join_by inner_join ungroup group_by count slice_sample rename summarise
+#' summarize
+#' @importFrom tidyr replace_na pivot_wider
+#' @importFrom stats rbinom runif rweibull rpois
+#' @importFrom truncnorm rtruncnorm
+#' @importFrom triangle rtriangle
 
 run_abm_iteration <- function(n_days = 72,
                               t_symp_room = 0.0005, t_hcw_room = 0.0005,
@@ -197,7 +236,7 @@ run_abm_iteration <- function(n_days = 72,
   hcw_colon = rbinom(
     n_hcw,
     size = 1,
-    prob = triangle::rtriangle(
+    prob = rtriangle(
       n = n_hcw,
       a = 0.001,
       b = 0.05,

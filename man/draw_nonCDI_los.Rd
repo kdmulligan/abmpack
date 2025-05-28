@@ -13,8 +13,6 @@ draw_nonCDI_los(dist = noCDI_los_dist_mdc_tran6days, transfer, md_cat)
 transfer not last, transfer last}
 
 \item{md_cat}{major diagnostic category, 0-25}
-
-\item{hcup_los}{the patient's los in the HCUP data}
 }
 \value{
 Returns a integer (or vector, function is vectorized) with the new LOS

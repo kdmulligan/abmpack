@@ -1,10 +1,15 @@
+utils::globalVariables(c("susceptible", "latent", "asymptomatic", "incubation",
+                         "symptomatic", "clin_res", "death"))
 #### function 7: which_dis_state()
 
 #' @title check disease states from a vector of patient IDs
 #'
 #' @description take vector of patient IDS and return disease status of each patient
 #'
+#' @param pats vector of patient ids of interest
+#'
 #' @return character vector of disease states
+
 which_dis_state = function(pats) {
   which_sus = which(pats %in% (susceptible@i + 1))
   which_lat = which(pats %in% (latent@i + 1))

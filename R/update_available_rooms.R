@@ -1,3 +1,4 @@
+utils::globalVariables(c("room_list", "hcup_id_vec"))
 #### function 6: update_available_rooms()
 
 #' @title Update list of available rooms based on occupancy

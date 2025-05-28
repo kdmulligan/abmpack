@@ -10,8 +10,6 @@ add_supp_hcup_dat(base_dat, supp_dat)
 \item{base_dat}{original processed data from hcup}
 
 \item{supp_dat}{additional/supplementary processed data from HCUP}
-
-\item{transfer}{transfer type of the hospitalization: not a transfer,}
 }
 \value{
 Returns a tibble with the original data and the new data combined.

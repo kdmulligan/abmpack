@@ -6,6 +6,9 @@
 \usage{
 which_dis_state(pats)
 }
+\arguments{
+\item{pats}{vector of patient ids of interest}
+}
 \value{
 character vector of disease states
 }

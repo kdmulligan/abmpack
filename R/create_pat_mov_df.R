@@ -15,6 +15,8 @@
 #'  output from my `sample_day_mvts()` rcpp function
 #'
 #' @return Data frame with number of rows equal to the number of patient moves per day
+#'
+#' @importFrom dplyr case_when
 
 # sourceCpp("rcpp/get_day_mvts.cpp")
 

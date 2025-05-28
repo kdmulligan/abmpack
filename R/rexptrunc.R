@@ -10,6 +10,7 @@
 #'
 #' @return Vector of length `n` of random samples from truncated exponential distribution
 #'
+#' @importFrom stats pexp runif qexp
 
 rexptrunc <- function(n, range, rate) {
   F.a <- pexp(min(range), rate = rate)
