@@ -6,8 +6,6 @@
 //' @param seed value of seed to be passed into the rcpp.
 //' @return returns character vector with the number of "icu,non" movements
 //' for the patients' upcoming day.
-//' @export
-//' @importFrom Rcpp sourceCpp
 
 #include <RcppArmadillo.h>
 #include <RcppArmadilloExtensions/sample.h>

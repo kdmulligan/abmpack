@@ -11,8 +11,6 @@
 //' @return returns a data frame with one row per patient movement in the day.
 //' Columns include patient id, room type (icu or non), and time block for
 //' movement.
-//' @export
-//' @importFrom Rcpp sourceCpp
 
 // [[Rcpp::depends(RcppArmadillo)]]
 

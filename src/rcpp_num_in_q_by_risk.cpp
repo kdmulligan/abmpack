@@ -6,8 +6,6 @@
 //' @return List with length equal to the number of facilities with the new
 //' number of patients at each risk level after sending the proper number of patients
 //' to the queue.
-//' @export
-//' @importFrom Rcpp sourceCpp
 
 #include <Rcpp.h>
 #include <numeric>
