@@ -13,7 +13,7 @@ adjust_for_queue_l <- function(patients, q_vec) {
     .Call('_abmpack_adjust_for_queue_l', PACKAGE = 'abmpack', patients, q_vec)
 }
 
-#' @name assign_rooms_cpp_seed
+#' @name rcpp_assign_rooms_cpp_seed
 #' @title Assign rooms to patients
 #' @description Randomly assign patients to hospital rooms with rcpp seed.
 #' Designed to deal with one facility at a time.
@@ -27,8 +27,8 @@ adjust_for_queue_l <- function(patients, q_vec) {
 #' for the room number to which they are assigned.
 NULL
 
-assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
-    .Call('_abmpack_assign_rooms_cpp_seed', PACKAGE = 'abmpack', pat_risks, icu, non, seed)
+rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
+    .Call('_abmpack_rcpp_assign_rooms_cpp_seed', PACKAGE = 'abmpack', pat_risks, icu, non, seed)
 }
 
 #' @name get_day_mvts_cpp
