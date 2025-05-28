@@ -10,6 +10,8 @@
 //' @param seed seed to be passed in to rcpp
 //' @return returns data frame with one column for patient and a second column
 //' for the room number to which they are assigned.
+//' @export
+//' @importFrom Rcpp sourceCpp
 
 #include <Rcpp.h>
 #include <numeric>

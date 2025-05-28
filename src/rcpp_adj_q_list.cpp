@@ -4,6 +4,9 @@
 //' @param patients List of patients at each facility
 //' @param q_vec number in queue total
 //' @return adjusted queue list.
+//' @export
+//' @importFrom Rcpp sourceCpp
+
 
 #include <Rcpp.h>
 #include <numeric>
