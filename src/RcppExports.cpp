@@ -23,9 +23,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// assign_rooms_cpp_seed
-Rcpp::DataFrame assign_rooms_cpp_seed(DataFrame pat_risks, SEXP icu, SEXP non, unsigned int seed);
-RcppExport SEXP _abmpack_assign_rooms_cpp_seed(SEXP pat_risksSEXP, SEXP icuSEXP, SEXP nonSEXP, SEXP seedSEXP) {
+// rcpp_assign_rooms_cpp_seed
+Rcpp::DataFrame rcpp_assign_rooms_cpp_seed(DataFrame pat_risks, SEXP icu, SEXP non, unsigned int seed);
+RcppExport SEXP _abmpack_rcpp_assign_rooms_cpp_seed(SEXP pat_risksSEXP, SEXP icuSEXP, SEXP nonSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -33,7 +33,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type icu(icuSEXP);
     Rcpp::traits::input_parameter< SEXP >::type non(nonSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(assign_rooms_cpp_seed(pat_risks, icu, non, seed));
+    rcpp_result_gen = Rcpp::wrap(rcpp_assign_rooms_cpp_seed(pat_risks, icu, non, seed));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -127,7 +127,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_abmpack_adjust_for_queue_l", (DL_FUNC) &_abmpack_adjust_for_queue_l, 2},
-    {"_abmpack_assign_rooms_cpp_seed", (DL_FUNC) &_abmpack_assign_rooms_cpp_seed, 4},
+    {"_abmpack_rcpp_assign_rooms_cpp_seed", (DL_FUNC) &_abmpack_rcpp_assign_rooms_cpp_seed, 4},
     {"_abmpack_combine_vectors", (DL_FUNC) &_abmpack_combine_vectors, 2},
     {"_abmpack_sort_cpp", (DL_FUNC) &_abmpack_sort_cpp, 1},
     {"_abmpack_get_day_mvts_cpp", (DL_FUNC) &_abmpack_get_day_mvts_cpp, 4},
