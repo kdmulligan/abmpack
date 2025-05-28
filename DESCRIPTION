@@ -16,7 +16,9 @@ Imports:
     tibble,
     truncnorm,
     stringr,
-    triangle
+    triangle,
+    Rcpp,
+    RcppArmadillo
 LinkingTo: 
     Rcpp,
     RcppArmadillo
