@@ -1,16 +1,16 @@
-//' @name adjust_for_queue_l
-//' @title Adjust admit queue list
-//' @description Check how many patients from each facility need to go to the queue.
-//' @param patients List of patients at each facility
-//' @param q_vec number in queue total
-//' @return adjusted queue list.
-
 #include <Rcpp.h>
 #include <numeric>
 #include <iterator>
 #include <list>
 using namespace Rcpp;
 using namespace std;
+
+//' @name adjust_for_queue_l
+//' @title Adjust admit queue list
+//' @description Check how many patients from each facility need to go to the queue.
+//' @param patients List of patients at each facility
+//' @param q_vec number in queue total
+//' @return adjusted queue list.
 
 IntegerVector adjust_for_queue_i(IntegerVector num_pat, int q_n) {
   // int n = x.size();

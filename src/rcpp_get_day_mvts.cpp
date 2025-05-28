@@ -1,3 +1,10 @@
+#include <RcppArmadillo.h>
+#include <algorithm>
+
+using namespace Rcpp;
+using namespace std;
+using namespace arma;
+
 //' @name get_day_mvts_cpp
 //' @title Determine the time/location for each patient's daily movements.
 //' @description Check how many patients from each facility need to go to the queue.
@@ -13,13 +20,6 @@
 //' movement.
 
 // [[Rcpp::depends(RcppArmadillo)]]
-
-#include <RcppArmadillo.h>
-#include <algorithm>
-
-using namespace Rcpp;
-using namespace std;
-using namespace arma;
 
 // [[Rcpp::export]]
 IntegerVector combine_vectors(IntegerVector x, IntegerVector y) {

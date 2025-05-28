@@ -1,3 +1,11 @@
+#include <Rcpp.h>
+#include <numeric>
+#include <iterator>
+#include <algorithm>
+#include <random>
+using namespace Rcpp;
+using namespace std;
+
 //' @name rcpp_assign_rooms_cpp_seed
 //' @title Assign rooms to patients
 //' @description Randomly assign patients to hospital rooms with rcpp seed.
@@ -10,14 +18,6 @@
 //' @param seed seed to be passed in to rcpp
 //' @return returns data frame with one column for patient and a second column
 //' for the room number to which they are assigned.
-
-#include <Rcpp.h>
-#include <numeric>
-#include <iterator>
-#include <algorithm>
-#include <random>
-using namespace Rcpp;
-using namespace std;
 
 // [[Rcpp::export]]
 Rcpp::DataFrame rcpp_assign_rooms_cpp_seed(DataFrame pat_risks, SEXP icu, SEXP non, unsigned int seed) {

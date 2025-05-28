@@ -1,3 +1,9 @@
+#include <Rcpp.h>
+#include <numeric>
+#include <iterator>
+using namespace Rcpp;
+using namespace std;
+
 //' @name num_in_q_by_risk
 //' @title Adjust admit patient list for the number of patients going to the queue.
 //' @description Check how many patients from each facility need to go to the queue.
@@ -6,12 +12,6 @@
 //' @return List with length equal to the number of facilities with the new
 //' number of patients at each risk level after sending the proper number of patients
 //' to the queue.
-
-#include <Rcpp.h>
-#include <numeric>
-#include <iterator>
-using namespace Rcpp;
-using namespace std;
 
 // [[Rcpp::export]]
 IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {

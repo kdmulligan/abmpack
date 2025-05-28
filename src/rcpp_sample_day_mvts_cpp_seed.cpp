@@ -1,12 +1,3 @@
-//' @name sample_day_mvts_cpp_seed
-//' @title Determine number of patient mvts for the day.
-//' @description function to randomly sample patient daily movement patterns
-//' @param los Vector of patient los for the visit,
-//' @param cur_room_type vector of patients' current room type (icu/non).
-//' @param seed value of seed to be passed into the rcpp.
-//' @return returns character vector with the number of "icu,non" movements
-//' for the patients' upcoming day.
-
 #include <RcppArmadillo.h>
 #include <RcppArmadilloExtensions/sample.h>
 #include <numeric>
@@ -16,6 +7,15 @@
 using namespace Rcpp;
 using namespace std;
 using namespace arma;
+
+//' @name sample_day_mvts_cpp_seed
+//' @title Determine number of patient mvts for the day.
+//' @description function to randomly sample patient daily movement patterns
+//' @param los Vector of patient los for the visit,
+//' @param cur_room_type vector of patients' current room type (icu/non).
+//' @param seed value of seed to be passed into the rcpp.
+//' @return returns character vector with the number of "icu,non" movements
+//' for the patients' upcoming day.
 
 // [[Rcpp::export]]
 CharacterVector sample_day_mvts_cpp_seed(IntegerVector los, IntegerVector cur_room_type, unsigned int seed) {
