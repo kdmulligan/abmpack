@@ -1,56 +1,3 @@
-## START ################################
-library(readr)
-library(dplyr)
-library(Matrix)
-library(triangle)
-library(Rcpp)
-library(tidyr)
-library(truncnorm)
-
-## import data ##################################################################
-hcup <- read_csv(
-  file = "Data/hcup_final_sim_2010dat.csv",
-  show_col_types = FALSE,
-  col_types = list(
-    patid = "i",
-    adate = "i",
-    ddate = "i",
-    days2next = "i",
-    amonth = "i",
-    dmonth = "i",
-    los_sim = "i",
-    aday_sim = "i",
-    viz_num = "i",
-    tran_seg = "i",
-    subseq_tran_seg = "i",
-    female = "i",
-    drg = "i",
-    mdc = "i",
-    dx_number = "i",
-    adrgriskmortality = "i",
-    tran_fr_snf = "i"
-  )
-) |>
-  filter(aday_sim <= (total_days_sim + 15))
-## ^^ patient / visit data is filtered to days <= number of sim days
-uniq_pat_dat <- read_csv(
-  file = "Data/hcup_uniq_patvar_2010dat.csv",
-  show_col_types = FALSE,
-  col_types = list(
-    patid = "i",
-    age_cat_n = "i",
-    aday_sim = "i",
-    los_rem_frday0 = "i"
-  )
-)
-rooms <- read_csv("Data/abm_rooms_uniq.csv", show_col_types = FALSE)
-hcws <- read_csv("Data/abm_hcws_uniq_withlookup.csv", show_col_types = FALSE)
-hcw_mvts <- read_csv("Data/abm_hcw_mvts_subset.csv", show_col_types = FALSE)
-
-hospid_max <-
-  read_csv("Data/hcup_final_sim_2010dat.csv", show_col_types = FALSE) |>
-  group_by(hcup_id) |>
-  summarize(max_los = max(los_sim, na.rm = TRUE))
 
 run_abm_iteration <- function(n_days = 72,
                               t_symp_room = 0.0005, t_hcw_room = 0.0005,
@@ -94,8 +41,10 @@ run_abm_iteration <- function(n_days = 72,
   obs_results = list(
     obs_tot_symp = 0,
     obs_recur = 0,
-    obs_hcw_asymp = 0
+    obs_hcw_asymp = 0,
+    obs_all_symp = 0
   )
+  tot_pat_newsymp_day = vector(mode = "numeric", length = n_days)
   ###
   # # R functions
   # source(file = "abm_functions_20241218.R")
@@ -172,7 +121,7 @@ run_abm_iteration <- function(n_days = 72,
     contam_next = Matrix(0L, n_rooms, 1),
     occup = Matrix(0L, n_rooms, 1)
   )
-
+  print(str(room_list))
   ## patient list
   n_pat = nrow(uniq_pat_dat)
   pat_list = list(
@@ -739,14 +688,23 @@ run_abm_iteration <- function(n_days = 72,
 
       # 7a: get new symptomatic patients not in hospital to admit
       # (df created at step 3: new_symp_pat)
-      symp_pat_to_enter_early = new_symp_pat$patid[pat_list$tran_stat[new_symp_pat$patid] == 3]
-      # if(length(symp_pat_to_enter_early) > 0) {print(paste0("#", length(pat_to_remove), "patients to enter early from new_symp_pat"))}
-      df_enter_early = tibble(patid = symp_pat_to_enter_early, viz_num = pat_list$viz_num[patid] + 1)
+      symp_pat_to_enter_early_ortoday = new_symp_pat$patid[pat_list$tran_stat[new_symp_pat$patid] == 3]
+      ## remove patients from coming in early if already slated to come in today
+      # symp_pat_to_enter_early = symp_pat_to_enter_early[!symp_pat_to_enter_early %in% incoming_pat]
+
+      df_enter_early = tibble(
+        patid = symp_pat_to_enter_early_ortoday,
+        viz_num = pat_list$viz_num[patid] + 1
+      )
       ## take early enter patients out of new symp, they enter with transfers (even tho they are newly symp)
       new_symp_pat = new_symp_pat |>
-        filter(!patid %in% symp_pat_to_enter_early)
+        filter(!patid %in% symp_pat_to_enter_early_ortoday)
       ## get secondary viz patients (including new symp coming early)
-      scndry_viz_pats = tibble(patid = incoming_pat[!incoming_pat %in% room_list$occup@x], viz_num = pat_list$viz_num[patid] + 1) |>
+      scndry_viz_pats = tibble(
+        patid = incoming_pat[!incoming_pat %in% room_list$occup@x],
+        viz_num = pat_list$viz_num[patid] + 1
+      ) |>
+        filter(!patid %in% symp_pat_to_enter_early_ortoday) |>
         bind_rows(df_enter_early) |>
         inner_join(hcup, join_by(patid, viz_num))
       # pat_w_next = pat_list$days_to_next_viz@i + 1
@@ -761,7 +719,7 @@ run_abm_iteration <- function(n_days = 72,
         filter(subseq_tran_seg == 1) |>
         select(patid, viz_key, hcup_id, adrgriskmortality)
 
-      idx_symp_pat_nihosp = idx_symp_pat_nihosp[!idx_symp_pat_nihosp %in% pat_to_remove]
+      idx_symp_pat_nihosp = idx_symp_pat_nihosp[!idx_symp_pat_nihosp %in% symp_pat_to_enter_early_ortoday]
       # 7c: get queue patients to admit
       # queue_viz_keys_df
 
@@ -1496,7 +1454,7 @@ run_abm_iteration <- function(n_days = 72,
         idx_new_pat_latent = idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (susceptible@i + 1)]
 
         ## set number of days in incubation period for newly infected patients
-        latent[idx_new_pat_latent] = rpois(n = length(idx_new_pat_latent), lamda = lambda_poi_latent)
+        latent[idx_new_pat_latent] = rpois(n = length(idx_new_pat_latent), lambda = lambda_poi_latent)
         # previously: latent[idx_new_pat_latent] = 3L
         ## new latent period patients are no longer susceptible
         susceptible[idx_new_pat_latent] = 0L
@@ -1546,8 +1504,11 @@ run_abm_iteration <- function(n_days = 72,
       recur_in_hosp_yesterday = recur_in_hosp
       obs_results$obs_recur = obs_results$obs_recur + new_obs_recur
 
+      tot_pat_newsymp_day[d] = obs_results$obs_all_symp + new_obs_symp
+
     } ## end of day loop
     end_time = Sys.time()
     time_taken = end_time - start_time
     print(time_taken)
+    return(tot_pat_newsymp_day)
   }
