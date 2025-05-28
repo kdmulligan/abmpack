@@ -10,7 +10,7 @@
 NULL
 
 adjust_for_queue_l <- function(patients, q_vec) {
-    .Call('_abmpack_adjust_for_queue_l', PACKAGE = 'abmpack', patients, q_vec)
+    .Call(`_abmpack_adjust_for_queue_l`, patients, q_vec)
 }
 
 #' @name rcpp_assign_rooms_cpp_seed
@@ -28,7 +28,7 @@ adjust_for_queue_l <- function(patients, q_vec) {
 NULL
 
 rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
-    .Call('_abmpack_rcpp_assign_rooms_cpp_seed', PACKAGE = 'abmpack', pat_risks, icu, non, seed)
+    .Call(`_abmpack_rcpp_assign_rooms_cpp_seed`, pat_risks, icu, non, seed)
 }
 
 #' @name get_day_mvts_cpp
@@ -47,15 +47,15 @@ rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
 NULL
 
 combine_vectors <- function(x, y) {
-    .Call('_abmpack_combine_vectors', PACKAGE = 'abmpack', x, y)
+    .Call(`_abmpack_combine_vectors`, x, y)
 }
 
 sort_cpp <- function(x) {
-    .Call('_abmpack_sort_cpp', PACKAGE = 'abmpack', x)
+    .Call(`_abmpack_sort_cpp`, x)
 }
 
 get_day_mvts_cpp <- function(ids, icu_num, non_num, end_loc) {
-    .Call('_abmpack_get_day_mvts_cpp', PACKAGE = 'abmpack', ids, icu_num, non_num, end_loc)
+    .Call(`_abmpack_get_day_mvts_cpp`, ids, icu_num, non_num, end_loc)
 }
 
 #' @name move_rooms_cpp_seed
@@ -71,7 +71,7 @@ get_day_mvts_cpp <- function(ids, icu_num, non_num, end_loc) {
 NULL
 
 move_rooms_cpp_seed <- function(pat_rm_type, icu, non, seed) {
-    .Call('_abmpack_move_rooms_cpp_seed', PACKAGE = 'abmpack', pat_rm_type, icu, non, seed)
+    .Call(`_abmpack_move_rooms_cpp_seed`, pat_rm_type, icu, non, seed)
 }
 
 #' @name num_in_q_by_risk
@@ -85,11 +85,11 @@ move_rooms_cpp_seed <- function(pat_rm_type, icu, non, seed) {
 NULL
 
 adjust_for_queue <- function(num_pat, q_n) {
-    .Call('_abmpack_adjust_for_queue', PACKAGE = 'abmpack', num_pat, q_n)
+    .Call(`_abmpack_adjust_for_queue`, num_pat, q_n)
 }
 
 num_in_q_by_risk <- function(risks_beds) {
-    .Call('_abmpack_num_in_q_by_risk', PACKAGE = 'abmpack', risks_beds)
+    .Call(`_abmpack_num_in_q_by_risk`, risks_beds)
 }
 
 #' @name sample_day_mvts_cpp_seed
@@ -103,6 +103,6 @@ num_in_q_by_risk <- function(risks_beds) {
 NULL
 
 sample_day_mvts_cpp_seed <- function(los, cur_room_type, seed) {
-    .Call('_abmpack_sample_day_mvts_cpp_seed', PACKAGE = 'abmpack', los, cur_room_type, seed)
+    .Call(`_abmpack_sample_day_mvts_cpp_seed`, los, cur_room_type, seed)
 }
 
