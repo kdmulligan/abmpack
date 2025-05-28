@@ -85,16 +85,6 @@ run_abm_iteration <- function(n_days = 72,
     obs_all_symp = 0
   )
   tot_pat_newsymp_day = vector(mode = "numeric", length = n_days)
-  ###
-  # # R functions
-  # source(file = "abm_functions_20241218.R")
-  # # rcpp functions
-  # sourceCpp("rcpp/assign_rooms_cpp_seed.cpp")  ## seed added
-  # sourceCpp("rcpp/num_in_q_by_risk.cpp")       ## does not need seed
-  # sourceCpp("rcpp/sample_day_mvts_cpp_seed.cpp")
-  # sourceCpp("rcpp/move_rooms_cpp_seed.cpp")    ## seed added
-  # SEED = 1212
-
 
   # ## import data ##################################################################
   # hcup <- read_csv(
