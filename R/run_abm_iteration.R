@@ -713,7 +713,7 @@ run_abm_iteration <- function(n_days = 72,
       ## step 7.1: admit patients ######################################################
       ## find all brand new patients with a visit
       ## new hcup patients with at least 1 visit already (inter-viz time is up)
-      incoming_pat = which(pat_list$days_to_next_viz == 1)
+      incoming_pat = which(pat_list$days_to_next_viz@x == 1)
       # same as: incoming_pat[incoming_pat %in% idx_to_discharge]
 
       # 7a: get new symptomatic patients not in hospital to admit
