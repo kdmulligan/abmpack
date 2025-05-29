@@ -3,6 +3,7 @@
 #include <iterator>
 #include <algorithm>
 #include <random>
+
 using namespace Rcpp;
 using namespace std;
 
@@ -16,9 +17,9 @@ using namespace std;
 //' @param seed seed to be passed in to rcpp
 //' @return returns data frame with one column for patient and a second column
 //' for the room number to which they are assigned.
-
 // [[Rcpp::export]]
 Rcpp::DataFrame move_rooms_cpp_seed(DataFrame pat_rm_type, SEXP icu, SEXP non, unsigned int seed) {
+
   // `pat` df columns are visitlink, ahaid, adrgriskmortality
   int n = pat_rm_type.nrow();
   IntegerVector icu_rooms;

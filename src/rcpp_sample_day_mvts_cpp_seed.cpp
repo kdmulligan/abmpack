@@ -1,8 +1,9 @@
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(RcppArmadilloExtensions)]]
+
 #include <RcppArmadillo.h>
 #include <RcppArmadilloExtensions/sample.h>
 #include <numeric>
-
-// [[Rcpp::depends(RcppArmadillo)]]
 
 using namespace Rcpp;
 using namespace std;
@@ -16,7 +17,6 @@ using namespace arma;
 //' @param seed value of seed to be passed into the rcpp.
 //' @return returns character vector with the number of "icu,non" movements
 //' for the patients' upcoming day.
-
 // [[Rcpp::export]]
 CharacterVector sample_day_mvts_cpp_seed(IntegerVector los, IntegerVector cur_room_type, unsigned int seed) {
   int n = los.size();
@@ -60,5 +60,3 @@ CharacterVector sample_day_mvts_cpp_seed(IntegerVector los, IntegerVector cur_ro
 
   return pat_mvts_char;
 }
-
-

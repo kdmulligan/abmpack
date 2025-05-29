@@ -2,6 +2,7 @@
 #include <numeric>
 #include <iterator>
 #include <list>
+
 using namespace Rcpp;
 using namespace std;
 
@@ -11,7 +12,7 @@ using namespace std;
 //' @param patients List of patients at each facility
 //' @param q_vec number in queue total
 //' @return adjusted queue list.
-
+ // [[Rcpp::export]]
 IntegerVector adjust_for_queue_i(IntegerVector num_pat, int q_n) {
   // int n = x.size();
   int q_fr = 0;
@@ -43,7 +44,6 @@ IntegerVector adjust_for_queue_i(IntegerVector num_pat, int q_n) {
   }
   return num_pat_adj;
 }
-
 // [[Rcpp::export]]
 List adjust_for_queue_l(List patients, IntegerVector q_vec) {
   int n = q_vec.size();

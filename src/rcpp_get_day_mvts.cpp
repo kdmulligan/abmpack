@@ -1,3 +1,4 @@
+// [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 #include <algorithm>
 
@@ -18,11 +19,9 @@ using namespace arma;
 //' @return returns a data frame with one row per patient movement in the day.
 //' Columns include patient id, room type (icu or non), and time block for
 //' movement.
-
-// [[Rcpp::depends(RcppArmadillo)]]
-
 // [[Rcpp::export]]
 IntegerVector combine_vectors(IntegerVector x, IntegerVector y) {
+
   // Create a new vector to store the combined result
   IntegerVector result(x.size() + y.size());
   // Copy elements from x to result

@@ -19,7 +19,6 @@ using namespace std;
 //' @param seed seed to be passed in to rcpp
 //' @return returns data frame with one column for patient and a second column
 //' for the room number to which they are assigned.
-
 // [[Rcpp::export]]
 Rcpp::DataFrame rcpp_assign_rooms_cpp_seed(DataFrame pat_risks, SEXP icu, SEXP non, unsigned int seed) {
 
