@@ -11,6 +11,18 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// adjust_for_queue_i
+IntegerVector adjust_for_queue_i(IntegerVector num_pat, int q_n);
+RcppExport SEXP _abmpack_adjust_for_queue_i(SEXP num_patSEXP, SEXP q_nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type num_pat(num_patSEXP);
+    Rcpp::traits::input_parameter< int >::type q_n(q_nSEXP);
+    rcpp_result_gen = Rcpp::wrap(adjust_for_queue_i(num_pat, q_n));
+    return rcpp_result_gen;
+END_RCPP
+}
 // adjust_for_queue_l
 List adjust_for_queue_l(List patients, IntegerVector q_vec);
 RcppExport SEXP _abmpack_adjust_for_queue_l(SEXP patientsSEXP, SEXP q_vecSEXP) {
@@ -126,6 +138,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_abmpack_adjust_for_queue_i", (DL_FUNC) &_abmpack_adjust_for_queue_i, 2},
     {"_abmpack_adjust_for_queue_l", (DL_FUNC) &_abmpack_adjust_for_queue_l, 2},
     {"_abmpack_rcpp_assign_rooms_cpp_seed", (DL_FUNC) &_abmpack_rcpp_assign_rooms_cpp_seed, 4},
     {"_abmpack_combine_vectors", (DL_FUNC) &_abmpack_combine_vectors, 2},
