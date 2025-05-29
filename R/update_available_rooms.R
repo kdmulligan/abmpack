@@ -24,9 +24,9 @@ update_available_rooms = function(rm_list, hcupids_vec) {
     non_avail_temp[[j]] <- rm_list$rid_uniq[(rm_list$hcup_id == hcupids_vec[j]) & (rm_list$icu == 0) & (rm_list$rid_uniq %in% avail_idx)]
   }
   ## original
-  # assign("icu_avail", icu_avail_temp, envir = .GlobalEnv)
-  # assign("non_avail", non_avail_temp, envir = .GlobalEnv)
+  assign("icu_avail", icu_avail_temp, envir = .GlobalEnv)
+  assign("non_avail", non_avail_temp, envir = .GlobalEnv)
   ## parent envir
-  assign("icu_avail", icu_avail_temp, envir = parent.frame())
-  assign("non_avail", non_avail_temp, envir = parent.frame())
+  # assign("icu_avail", icu_avail_temp, envir = parent.frame())
+  # assign("non_avail", non_avail_temp, envir = parent.frame())
 }
