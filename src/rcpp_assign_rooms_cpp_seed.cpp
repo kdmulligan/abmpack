@@ -3,6 +3,7 @@
 #include <iterator>
 #include <algorithm>
 #include <random>
+
 using namespace Rcpp;
 using namespace std;
 
@@ -21,6 +22,7 @@ using namespace std;
 
 // [[Rcpp::export]]
 Rcpp::DataFrame rcpp_assign_rooms_cpp_seed(DataFrame pat_risks, SEXP icu, SEXP non, unsigned int seed) {
+
   // `pat` df columns are visitlink, ahaid, adrgriskmortality
   int n = pat_risks.nrow();
   IntegerVector icu_rooms;
