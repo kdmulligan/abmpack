@@ -14,9 +14,8 @@ using namespace std;
 //' number of patients at each risk level after sending the proper number of patients
 //' to the queue.
 //' @export
-// [[Rcpp::export]]
-IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
 
+IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
   // int n = x.size();
   int q_fr = 0;
   // output vector
@@ -47,6 +46,7 @@ IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
   }
   return num_pat_adj;
 }
+
 // [[Rcpp::export]]
 List num_in_q_by_risk(DataFrame risks_beds) {
   NumericVector id = risks_beds[0];

@@ -1,4 +1,5 @@
 // [[Rcpp::depends(RcppArmadillo)]]
+
 #include <RcppArmadillo.h>
 #include <algorithm>
 
@@ -20,7 +21,7 @@ using namespace arma;
 //' Columns include patient id, room type (icu or non), and time block for
 //' movement.
 //' @export
-// [[Rcpp::export]]
+
 IntegerVector combine_vectors(IntegerVector x, IntegerVector y) {
 
   // Create a new vector to store the combined result
