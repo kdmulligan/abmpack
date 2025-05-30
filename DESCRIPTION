@@ -2,7 +2,7 @@ Package: abmpack
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R: 
-    person("Kailey", "Henkle", role = c("aut", "cre"),
+    person("Kailey", "Henkle", email = "kailey-henkle@uiowa.edu", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
@@ -18,8 +18,7 @@ Imports:
     stringr,
     triangle,
     Rcpp,
-    RcppArmadillo,
-    RcppArmadilloExtensions
+    RcppArmadillo
 LinkingTo: 
     Rcpp,
     RcppArmadillo
