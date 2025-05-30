@@ -33,7 +33,6 @@ IntegerVector combine_vectors(IntegerVector x, IntegerVector y) {
   return result;
 }
 
-// [[Rcpp::export]]
 Rcpp::IntegerVector sort_cpp(Rcpp::IntegerVector x) {
   std::sort(x.begin(), x.end());
   return x;
