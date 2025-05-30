@@ -2,11 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{num_in_q_by_risk}
 \alias{num_in_q_by_risk}
-\alias{adjust_for_queue}
 \title{Adjust admit patient list for the number of patients going to the queue.}
-\usage{
-adjust_for_queue(num_pat, q_n)
-}
 \arguments{
 \item{risks_beds}{Data frame with columns: hospital id, number of patients
 at each risk level 1-4, number of icu beds, number of non-icu beds.}

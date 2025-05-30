@@ -2,11 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{get_day_mvts_cpp}
 \alias{get_day_mvts_cpp}
-\alias{combine_vectors}
 \title{Determine the time/location for each patient's daily movements.}
-\usage{
-combine_vectors(x, y)
-}
 \arguments{
 \item{ids}{vector of patients to get daily movement pattern for}
 
