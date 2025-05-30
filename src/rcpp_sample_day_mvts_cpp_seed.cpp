@@ -1,5 +1,4 @@
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::depends(RcppArmadilloExtensions)]]
 
 #include <RcppArmadillo.h>
 #include <RcppArmadilloExtensions/sample.h>
@@ -16,6 +15,7 @@ using namespace arma;
 //' @param cur_room_type vector of patients' current room type (icu/non).
 //' @param seed value of seed to be passed into the rcpp.
 //' @return returns character vector with the number of "icu,non" movements
+//' @export
 //' for the patients' upcoming day.
 // [[Rcpp::export]]
 CharacterVector sample_day_mvts_cpp_seed(IntegerVector los, IntegerVector cur_room_type, unsigned int seed) {
@@ -38,21 +38,21 @@ CharacterVector sample_day_mvts_cpp_seed(IntegerVector los, IntegerVector cur_ro
       if(cur_room_type[i] == 0) {
         // short LOS, NON room start
         NumericVector probs1 = {0.7438, 0.1469, 0.0535, 0.0338, 0.0145, 0.0042, 0.0014, 0.0012, 0.0003, 0.0003};
-        pat_mvts[i] = as<IntegerVector>(Rcpp::sample(mvt_opt, 1, true, probs1))[0];
+        pat_mvts[i] = as<IntegerVector>(RcppArmadillo::sample(mvt_opt, 1, true, probs1))[0];
       } else {
         // short LOS, ICU room start
         NumericVector probs2 = {0.8012, 0.0964, 0.0137, 0.0016, 0.0616, 0.0103, 0.0097, 0.0047, 0.0005, 0.0004};
-        pat_mvts[i] = as<IntegerVector>(Rcpp::sample(mvt_opt, 1, true, probs2))[0];
+        pat_mvts[i] = as<IntegerVector>(RcppArmadillo::sample(mvt_opt, 1, true, probs2))[0];
       }
     } else {
       if(cur_room_type[i] == 0) {
         // long LOS, NON room start
         NumericVector probs3 = {0.9122, 0.0534, 0.0180, 0.0062, 0.0076, 0.0012, 0.0003, 0.0006, 0.0002, 0.0002};
-        pat_mvts[i] = as<IntegerVector>(Rcpp::sample(mvt_opt, 1, true, probs3))[0];
+        pat_mvts[i] = as<IntegerVector>(RcppArmadillo::sample(mvt_opt, 1, true, probs3))[0];
       } else {
         // long LOS, ICU room start
         NumericVector probs4 = {0.9378, 0.0121, 0.0014, 0.0002, 0.0370, 0.0079, 0.0009, 0.0023, 0.0003, 0.0002};
-        pat_mvts[i] = as<IntegerVector>(Rcpp::sample(mvt_opt, 1, true, probs4))[0];
+        pat_mvts[i] = as<IntegerVector>(RcppArmadillo::sample(mvt_opt, 1, true, probs4))[0];
       }
     }
     pat_mvts_char[i] = mvt_opt_char[pat_mvts[i] - 1];
