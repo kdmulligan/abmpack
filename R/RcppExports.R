@@ -8,9 +8,7 @@
 #' @param q_vec number in queue total
 #' @return adjusted queue list.
 #' @export
-adjust_for_queue_i <- function(num_pat, q_n) {
-    .Call(`_abmpack_adjust_for_queue_i`, num_pat, q_n)
-}
+NULL
 
 adjust_for_queue_l <- function(patients, q_vec) {
     .Call(`_abmpack_adjust_for_queue_l`, patients, q_vec)
@@ -47,13 +45,7 @@ rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
 #' Columns include patient id, room type (icu or non), and time block for
 #' movement.
 #' @export
-combine_vectors <- function(x, y) {
-    .Call(`_abmpack_combine_vectors`, x, y)
-}
-
-sort_cpp <- function(x) {
-    .Call(`_abmpack_sort_cpp`, x)
-}
+NULL
 
 get_day_mvts_cpp <- function(ids, icu_num, non_num, end_loc) {
     .Call(`_abmpack_get_day_mvts_cpp`, ids, icu_num, non_num, end_loc)
@@ -83,9 +75,7 @@ move_rooms_cpp_seed <- function(pat_rm_type, icu, non, seed) {
 #' number of patients at each risk level after sending the proper number of patients
 #' to the queue.
 #' @export
-adjust_for_queue <- function(num_pat, q_n) {
-    .Call(`_abmpack_adjust_for_queue`, num_pat, q_n)
-}
+NULL
 
 num_in_q_by_risk <- function(risks_beds) {
     .Call(`_abmpack_num_in_q_by_risk`, risks_beds)
