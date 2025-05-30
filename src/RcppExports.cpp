@@ -11,18 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// adjust_for_queue_i
-IntegerVector adjust_for_queue_i(IntegerVector num_pat, int q_n);
-RcppExport SEXP _abmpack_adjust_for_queue_i(SEXP num_patSEXP, SEXP q_nSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type num_pat(num_patSEXP);
-    Rcpp::traits::input_parameter< int >::type q_n(q_nSEXP);
-    rcpp_result_gen = Rcpp::wrap(adjust_for_queue_i(num_pat, q_n));
-    return rcpp_result_gen;
-END_RCPP
-}
 // adjust_for_queue_l
 List adjust_for_queue_l(List patients, IntegerVector q_vec);
 RcppExport SEXP _abmpack_adjust_for_queue_l(SEXP patientsSEXP, SEXP q_vecSEXP) {
@@ -46,29 +34,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type non(nonSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type seed(seedSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_assign_rooms_cpp_seed(pat_risks, icu, non, seed));
-    return rcpp_result_gen;
-END_RCPP
-}
-// combine_vectors
-IntegerVector combine_vectors(IntegerVector x, IntegerVector y);
-RcppExport SEXP _abmpack_combine_vectors(SEXP xSEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(combine_vectors(x, y));
-    return rcpp_result_gen;
-END_RCPP
-}
-// sort_cpp
-Rcpp::IntegerVector sort_cpp(Rcpp::IntegerVector x);
-RcppExport SEXP _abmpack_sort_cpp(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(sort_cpp(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -100,18 +65,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// adjust_for_queue
-IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n);
-RcppExport SEXP _abmpack_adjust_for_queue(SEXP num_patSEXP, SEXP q_nSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type num_pat(num_patSEXP);
-    Rcpp::traits::input_parameter< int >::type q_n(q_nSEXP);
-    rcpp_result_gen = Rcpp::wrap(adjust_for_queue(num_pat, q_n));
-    return rcpp_result_gen;
-END_RCPP
-}
 // num_in_q_by_risk
 List num_in_q_by_risk(DataFrame risks_beds);
 RcppExport SEXP _abmpack_num_in_q_by_risk(SEXP risks_bedsSEXP) {
@@ -138,14 +91,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_abmpack_adjust_for_queue_i", (DL_FUNC) &_abmpack_adjust_for_queue_i, 2},
     {"_abmpack_adjust_for_queue_l", (DL_FUNC) &_abmpack_adjust_for_queue_l, 2},
     {"_abmpack_rcpp_assign_rooms_cpp_seed", (DL_FUNC) &_abmpack_rcpp_assign_rooms_cpp_seed, 4},
-    {"_abmpack_combine_vectors", (DL_FUNC) &_abmpack_combine_vectors, 2},
-    {"_abmpack_sort_cpp", (DL_FUNC) &_abmpack_sort_cpp, 1},
     {"_abmpack_get_day_mvts_cpp", (DL_FUNC) &_abmpack_get_day_mvts_cpp, 4},
     {"_abmpack_move_rooms_cpp_seed", (DL_FUNC) &_abmpack_move_rooms_cpp_seed, 4},
-    {"_abmpack_adjust_for_queue", (DL_FUNC) &_abmpack_adjust_for_queue, 2},
     {"_abmpack_num_in_q_by_risk", (DL_FUNC) &_abmpack_num_in_q_by_risk, 1},
     {"_abmpack_sample_day_mvts_cpp_seed", (DL_FUNC) &_abmpack_sample_day_mvts_cpp_seed, 3},
     {NULL, NULL, 0}
