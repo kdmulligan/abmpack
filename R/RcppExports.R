@@ -7,6 +7,7 @@
 #' @param patients List of patients at each facility
 #' @param q_vec number in queue total
 #' @return adjusted queue list.
+#' @export
 adjust_for_queue_i <- function(num_pat, q_n) {
     .Call(`_abmpack_adjust_for_queue_i`, num_pat, q_n)
 }
@@ -27,6 +28,7 @@ adjust_for_queue_l <- function(patients, q_vec) {
 #' @param seed seed to be passed in to rcpp
 #' @return returns data frame with one column for patient and a second column
 #' for the room number to which they are assigned.
+#' @export
 rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
     .Call(`_abmpack_rcpp_assign_rooms_cpp_seed`, pat_risks, icu, non, seed)
 }
@@ -44,6 +46,7 @@ rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
 #' @return returns a data frame with one row per patient movement in the day.
 #' Columns include patient id, room type (icu or non), and time block for
 #' movement.
+#' @export
 combine_vectors <- function(x, y) {
     .Call(`_abmpack_combine_vectors`, x, y)
 }
@@ -66,6 +69,7 @@ get_day_mvts_cpp <- function(ids, icu_num, non_num, end_loc) {
 #' @param seed seed to be passed in to rcpp
 #' @return returns data frame with one column for patient and a second column
 #' for the room number to which they are assigned.
+#' @export
 move_rooms_cpp_seed <- function(pat_rm_type, icu, non, seed) {
     .Call(`_abmpack_move_rooms_cpp_seed`, pat_rm_type, icu, non, seed)
 }
@@ -78,6 +82,7 @@ move_rooms_cpp_seed <- function(pat_rm_type, icu, non, seed) {
 #' @return List with length equal to the number of facilities with the new
 #' number of patients at each risk level after sending the proper number of patients
 #' to the queue.
+#' @export
 adjust_for_queue <- function(num_pat, q_n) {
     .Call(`_abmpack_adjust_for_queue`, num_pat, q_n)
 }
