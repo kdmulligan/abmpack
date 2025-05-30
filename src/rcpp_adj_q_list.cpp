@@ -13,7 +13,7 @@ using namespace std;
 //' @param q_vec number in queue total
 //' @return adjusted queue list.
 //' @export
- // [[Rcpp::export]]
+// [[Rcpp::export]]
 IntegerVector adjust_for_queue_i(IntegerVector num_pat, int q_n) {
   // int n = x.size();
   int q_fr = 0;

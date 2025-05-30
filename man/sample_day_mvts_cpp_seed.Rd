@@ -3,6 +3,9 @@
 \name{sample_day_mvts_cpp_seed}
 \alias{sample_day_mvts_cpp_seed}
 \title{Determine number of patient mvts for the day.}
+\usage{
+sample_day_mvts_cpp_seed(los, cur_room_type, seed)
+}
 \arguments{
 \item{los}{Vector of patient los for the visit,}
 

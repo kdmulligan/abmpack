@@ -3,6 +3,9 @@
 \name{rcpp_assign_rooms_cpp_seed}
 \alias{rcpp_assign_rooms_cpp_seed}
 \title{Assign rooms to patients}
+\usage{
+rcpp_assign_rooms_cpp_seed(pat_risks, icu, non, seed)
+}
 \arguments{
 \item{pat_risks}{data frame where each row is a facility and four columns
 one for each risk level to hold the number of patients at each risk level

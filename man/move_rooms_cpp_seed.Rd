@@ -3,6 +3,9 @@
 \name{move_rooms_cpp_seed}
 \alias{move_rooms_cpp_seed}
 \title{Move patient rooms}
+\usage{
+move_rooms_cpp_seed(pat_rm_type, icu, non, seed)
+}
 \arguments{
 \item{pat_rm_type}{Data frame of patients and the room type they are to go to.}
 

@@ -7,7 +7,6 @@
 #' @param patients List of patients at each facility
 #' @param q_vec number in queue total
 #' @return adjusted queue list.
-#' @export
 adjust_for_queue_i <- function(num_pat, q_n) {
     .Call(`_abmpack_adjust_for_queue_i`, num_pat, q_n)
 }
@@ -27,7 +26,6 @@ adjust_for_queue_l <- function(patients, q_vec) {
 #' @param non vector of number of non-icu rooms available at each hospital
 #' @param seed seed to be passed in to rcpp
 #' @return returns data frame with one column for patient and a second column
-#' @export
 #' for the room number to which they are assigned.
 rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
     .Call(`_abmpack_rcpp_assign_rooms_cpp_seed`, pat_risks, icu, non, seed)
@@ -46,7 +44,6 @@ rcpp_assign_rooms_cpp_seed <- function(pat_risks, icu, non, seed) {
 #' @return returns a data frame with one row per patient movement in the day.
 #' Columns include patient id, room type (icu or non), and time block for
 #' movement.
-#' @export
 combine_vectors <- function(x, y) {
     .Call(`_abmpack_combine_vectors`, x, y)
 }
@@ -69,7 +66,6 @@ get_day_mvts_cpp <- function(ids, icu_num, non_num, end_loc) {
 #' @param seed seed to be passed in to rcpp
 #' @return returns data frame with one column for patient and a second column
 #' for the room number to which they are assigned.
-#' @export
 move_rooms_cpp_seed <- function(pat_rm_type, icu, non, seed) {
     .Call(`_abmpack_move_rooms_cpp_seed`, pat_rm_type, icu, non, seed)
 }
@@ -82,7 +78,6 @@ move_rooms_cpp_seed <- function(pat_rm_type, icu, non, seed) {
 #' @return List with length equal to the number of facilities with the new
 #' number of patients at each risk level after sending the proper number of patients
 #' to the queue.
-#' @export
 adjust_for_queue <- function(num_pat, q_n) {
     .Call(`_abmpack_adjust_for_queue`, num_pat, q_n)
 }
@@ -98,8 +93,8 @@ num_in_q_by_risk <- function(risks_beds) {
 #' @param cur_room_type vector of patients' current room type (icu/non).
 #' @param seed value of seed to be passed into the rcpp.
 #' @return returns character vector with the number of "icu,non" movements
-#' @export
 #' for the patients' upcoming day.
+#' @export
 sample_day_mvts_cpp_seed <- function(los, cur_room_type, seed) {
     .Call(`_abmpack_sample_day_mvts_cpp_seed`, los, cur_room_type, seed)
 }

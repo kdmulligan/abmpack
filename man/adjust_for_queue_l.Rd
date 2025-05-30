@@ -2,7 +2,11 @@
 % Please edit documentation in R/RcppExports.R
 \name{adjust_for_queue_l}
 \alias{adjust_for_queue_l}
+\alias{adjust_for_queue_i}
 \title{Adjust admit queue list}
+\usage{
+adjust_for_queue_i(num_pat, q_n)
+}
 \arguments{
 \item{patients}{List of patients at each facility}
 
