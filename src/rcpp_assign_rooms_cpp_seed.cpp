@@ -18,6 +18,7 @@ using namespace std;
 //' @param non vector of number of non-icu rooms available at each hospital
 //' @param seed seed to be passed in to rcpp
 //' @return returns data frame with one column for patient and a second column
+//' @export
 //' for the room number to which they are assigned.
 // [[Rcpp::export]]
 Rcpp::DataFrame rcpp_assign_rooms_cpp_seed(DataFrame pat_risks, SEXP icu, SEXP non, unsigned int seed) {

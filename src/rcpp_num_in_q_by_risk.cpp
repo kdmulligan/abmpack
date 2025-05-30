@@ -13,6 +13,7 @@ using namespace std;
 //' @return List with length equal to the number of facilities with the new
 //' number of patients at each risk level after sending the proper number of patients
 //' to the queue.
+//' @export
 // [[Rcpp::export]]
 IntegerVector adjust_for_queue(IntegerVector num_pat, int q_n) {
 
