@@ -713,7 +713,8 @@ run_abm_iteration <- function(n_days = 72,
       ## step 7.1: admit patients ######################################################
       ## find all brand new patients with a visit
       ## new hcup patients with at least 1 visit already (inter-viz time is up)
-      incoming_pat = which(pat_list$days_to_next_viz@x == 1)
+      incoming_pat = (pat_list$days_to_next_viz@i + 1)[(pat_list$days_to_next_viz@x == 1)]
+      incoming_pat = incoming_pat[!incoming_pat %in% room_list$occup@x]
       # same as: incoming_pat[incoming_pat %in% idx_to_discharge]
 
       # 7a: get new symptomatic patients not in hospital to admit
@@ -731,7 +732,7 @@ run_abm_iteration <- function(n_days = 72,
         filter(!patid %in% symp_pat_to_enter_early_ortoday)
       ## get secondary viz patients (including new symp coming early)
       scndry_viz_pats = tibble(
-        patid = incoming_pat[!incoming_pat %in% room_list$occup@x],
+        patid = incoming_pat,
         viz_num = pat_list$viz_num[patid] + 1
       ) |>
         filter(!patid %in% symp_pat_to_enter_early_ortoday) |>
