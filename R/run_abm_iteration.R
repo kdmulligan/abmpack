@@ -1535,7 +1535,7 @@ run_abm_iteration <- function(n_days = 72,
       recur_in_hosp_yesterday = recur_in_hosp
       obs_results$obs_recur = obs_results$obs_recur + new_obs_recur
 
-      tot_pat_newsymp_day[d] = obs_results$obs_all_symp + new_obs_symp
+      tot_pat_newsymp_day[d] = obs_results$obs_all_symp
 
     } ## end of day loop
     end_time = Sys.time()
