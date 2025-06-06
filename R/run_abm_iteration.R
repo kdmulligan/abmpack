@@ -1429,10 +1429,9 @@ run_abm_iteration <- function(n_days = 72,
 
         # idx_room_contam # from 9f
         prob_hcw_asymp = tb_hcw_room_inter |>
-          mutate(prob_hcw_asymp = if_else(rid_uniq %in% idx_room_contam, (1 -
-                                                                            exp(
-                                                                              -total_sec * tau_room_hcw
-                                                                            )), 0)) |>
+          mutate(
+            prob_hcw_asymp = if_else(
+              rid_uniq %in% idx_room_contam, (1 - exp(-total_sec * tau_room_hcw)), 0)) |>
           # filter(!is.na(prob_hcw_asymp)) |>
           select(hid_uniq, prob_hcw_asymp)
 
