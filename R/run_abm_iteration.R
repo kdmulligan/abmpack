@@ -857,15 +857,19 @@ run_abm_iteration <- function(n_days = 72,
       # assign rooms
       for (i in 1:length(hcup_id_vec)) {
         ## this for loop is fast
-        new_rooms[[i]] <-
+        temp_to_admit =
           to_admit_pat_7_1 |>
           filter(hcup_id == hcup_id_vec[i]) |>
           arrange(desc(adrgriskmortality)) |>
-          select(patid, adrgriskmortality) |>
+          select(patid, adrgriskmortality)
+        current_icu = icu_avail[[as.character(hcup_id_vec[i])]]
+        current_non = non_avail[[as.character(hcup_id_vec[i])]]
+        print(paste0("tot pat: ", nrow(temp_to_admit), "; tot rooms:", length(current_icu) + length(current_non),"; icu: ", length(current_icu), "; non: ", length(current_non)))
+        new_rooms[[i]] =
           rcpp_assign_rooms_cpp_seed(
-            pat_risks = _,
-            icu = icu_avail[[as.character(hcup_id_vec[i])]],
-            non = non_avail[[as.character(hcup_id_vec[i])]],
+            pat_risks = temp_to_admit,
+            icu = current_icu,
+            non = current_non,
             seed = SEED
           )
       }
@@ -1055,21 +1059,20 @@ run_abm_iteration <- function(n_days = 72,
       new_rooms <- vector("list", length(hcup_id_vec))
       for (i in 1:length(hcup_id_vec)) {
         ## this for loop is fast
-        new_rooms[[i]] <-
+        temp_to_admit =
           to_admit_df |>
           filter(hcup_id == hcup_id_vec[i]) |>
           arrange(desc(adrgriskmortality)) |>
           select(patid, adrgriskmortality) |>
-          mutate(adrgriskmortality = if_else(
-            adrgriskmortality == 0 |
-              is.na(adrgriskmortality),
-            1,
-            adrgriskmortality
-          )) |>
+          mutate(adrgriskmortality = if_else(adrgriskmortality == 0 | is.na(adrgriskmortality), 1, adrgriskmortality))
+        current_icu = icu_avail[[as.character(hcup_id_vec[i])]]
+        current_non = non_avail[[as.character(hcup_id_vec[i])]]
+        print(paste0("tot pat: ", nrow(temp_to_admit), "; tot rooms:", length(current_icu) + length(current_non),"; icu: ", length(current_icu), "; non: ", length(current_non)))
+        new_rooms[[i]] =
           rcpp_assign_rooms_cpp_seed(
-            pat_risks = _,
-            icu = icu_avail[[as.character(hcup_id_vec[i])]],
-            non = non_avail[[as.character(hcup_id_vec[i])]],
+            pat_risks = temp_to_admit,
+            icu = current_icu,
+            non = current_non,
             seed = SEED
           )
       }
