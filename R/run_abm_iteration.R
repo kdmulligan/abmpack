@@ -828,11 +828,11 @@ run_abm_iteration <- function(n_days = 72,
             n_in_prev_q = sum(queue_viz_keys_df$hcup_id == names(n_in_queue)[f])
             if (n_in_prev_q >= n_to_q_for_f) {
               ## if enough to just leave queue people in queue
-              n_to_leave = n_in_prev_q - n_to_q_for_f
+              # n_to_leave = n_in_prev_q - n_to_q_for_f
               key_to_leave_in_q =
                 queue_viz_keys_df |>
                 filter(hcup_id == names(n_in_queue)[f]) |>
-                slice_sample(n = n_to_leave) |>
+                slice_sample(n = n_to_q_for_f) |>
                 pull(viz_key)
               leave_in_queue = c(leave_in_queue, key_to_leave_in_q)
             } else {
@@ -864,7 +864,9 @@ run_abm_iteration <- function(n_days = 72,
           select(patid, adrgriskmortality)
         current_icu = icu_avail[[as.character(hcup_id_vec[i])]]
         current_non = non_avail[[as.character(hcup_id_vec[i])]]
-        print(paste0("tot pat: ", nrow(temp_to_admit), "; tot rooms:", length(current_icu) + length(current_non),"; icu: ", length(current_icu), "; non: ", length(current_non)))
+        if(nrow(temp_to_admit) > length(current_icu) + length(current_non)){
+          print(paste0("i=", i, "; tot pat: ", nrow(temp_to_admit), "; tot rooms:", length(current_icu) + length(current_non),"; icu: ", length(current_icu), "; non: ", length(current_non)))
+        }
         new_rooms[[i]] =
           rcpp_assign_rooms_cpp_seed(
             pat_risks = temp_to_admit,
@@ -1067,7 +1069,9 @@ run_abm_iteration <- function(n_days = 72,
           mutate(adrgriskmortality = if_else(adrgriskmortality == 0 | is.na(adrgriskmortality), 1, adrgriskmortality))
         current_icu = icu_avail[[as.character(hcup_id_vec[i])]]
         current_non = non_avail[[as.character(hcup_id_vec[i])]]
-        print(paste0("tot pat: ", nrow(temp_to_admit), "; tot rooms:", length(current_icu) + length(current_non),"; icu: ", length(current_icu), "; non: ", length(current_non)))
+        if(nrow(temp_to_admit) > length(current_icu) + length(current_non)){
+          print(paste0("i=", i, "; tot pat: ", nrow(temp_to_admit), "; tot rooms:", length(current_icu) + length(current_non),"; icu: ", length(current_icu), "; non: ", length(current_non)))
+        }
         new_rooms[[i]] =
           rcpp_assign_rooms_cpp_seed(
             pat_risks = temp_to_admit,
