@@ -615,7 +615,6 @@ run_abm_iteration <- function(n_days = 72,
               )
           }
         }
-
         ## update LOS details if already in the hospital
         ## indices of the vector `idx_now_in_symp` who are in the hospital
         idx_temp = which(idx_now_in_symp %in% idx_symp_pat_in_hosp)
