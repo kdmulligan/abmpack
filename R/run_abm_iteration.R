@@ -1174,6 +1174,7 @@ run_abm_iteration <- function(n_days = 72,
         seed = SEED
       )
       if (length(pat_in_hosp_idx) != length(order_pat_rooms_idx)) {
+        save.image(file = "Data/current_workspace.RData")
         tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE) |> print(n = 10)
         tibble(pat = pat_in_hosp_idx) |> count(pat, sort = TRUE) |> print(n = 10)
         # who doesn't have a room??
