@@ -1174,6 +1174,12 @@ run_abm_iteration <- function(n_days = 72,
         seed = SEED
       )
       if (length(pat_in_hosp_idx) != length(order_pat_rooms_idx)) {
+        tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE)
+        tibble(pat = pat_in_hosp_idx) |> count(pat, sort = TRUE)
+        # who doesn't have a room??
+        pat_in_hosp_idx[!pat_in_hosp_idx %in% room_list$occup@x]
+        ## patients in a room but not in the "patients in hosp index" (should have been discharged)
+        room_list$occup@x[!room_list$occup@x %in% pat_in_hosp_idx]
         stop(
           "step 8a error: number of hospitalizated patients is not equal to the number of occupied beds"
         )
