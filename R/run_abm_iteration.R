@@ -169,7 +169,8 @@ run_abm_iteration <- function(n_days = 72,
     risk_mor = Matrix(0L, n_pat, 1),
     viz_key = Matrix(0L, n_pat, 1),
     days_to_next_viz = Matrix(0L, n_pat, 1),
-    viz_num = Matrix(0L, n_pat, 1)
+    viz_num = Matrix(0L, n_pat, 1),
+    new_symp_viz = Matrix(0L, n_pat, 1)
   )
   ge65_uniq_pat_idx = which(pat_list$ge65_flag == 1)
 
@@ -667,6 +668,7 @@ run_abm_iteration <- function(n_days = 72,
       pat_list$room_dwell[idx_to_discharge] = 0L
       # pat_list$facility[idx_to_discharge] = 0L    # for now, not setting this to zero in order to have facility if viz is constructed for symp CDI
       pat_list$risk_mor[idx_to_discharge] = 0L
+      pat_list$new_symp_viz[idx_to_discharge] = 0L
 
       ## remove discharged patients from their rooms
       # room indices where someone is being discharged
@@ -728,7 +730,11 @@ run_abm_iteration <- function(n_days = 72,
       )
       ## take early enter patients out of new symp, they enter with transfers (even tho they are newly symp)
       new_symp_pat = new_symp_pat |>
-        filter(!patid %in% symp_pat_to_enter_early_ortoday)
+        filter(!patid %in% symp_pat_to_enter_early_ortoday) |>
+        filter(!patid %in% queue_viz_keys_df$patid)
+      ## adjust vector of symp patients
+      remove_idx = c(symp_pat_to_enter_early_ortoday, queue_viz_keys_df$patid)
+      idx_symp_pat_nihosp = idx_symp_pat_nihosp[!idx_symp_pat_nihosp %in% remove_idx]
       ## get secondary viz patients (including new symp coming early)
       scndry_viz_pats = tibble(
         patid = incoming_pat,
@@ -749,10 +755,25 @@ run_abm_iteration <- function(n_days = 72,
         filter(subseq_tran_seg == 1) |>
         select(patid, viz_key, hcup_id, adrgriskmortality)
 
-      idx_symp_pat_nihosp = idx_symp_pat_nihosp[!idx_symp_pat_nihosp %in% symp_pat_to_enter_early_ortoday]
       # 7c: get queue patients to admit
       # queue_viz_keys_df
-
+      ## adjust LOS for symp queue patients
+      adj_queue_los_df = queue_viz_keys_df |>
+        filter(patid %in% new_symp_pat$patid) |>
+        inner_join(hcup, join_by(patid, viz_key, hcup_id, adrgriskmortality)) |>
+        select(patid, viz_key, hcup_id, los_sim, tran_seg, mdc)
+      new_los <- rep(NA, nrow(adj_queue_los_df))
+      for (s in 1:nrow(adj_queue_los_df)) {
+        s = 1
+        new_los[s] = draw_CDI_los(
+          current_day = 0,
+          transfer = adj_queue_los_df$tran_seg[s],
+          md_cat = adj_queue_los_df$mdc[s],
+          hcup_los = adj_queue_los_df$los_sim[s],
+          hosp_id = adj_queue_los_df$hcup_id[s]
+        )
+      }
+      adj_queue_los_df = adj_queue_los_df |> mutate(adj_los = new_los)
       # 7d.1: get available rooms per facility
       update_available_rooms(rm_list = room_list, hcupids_vec = hcup_id_vec)
       ## R func that updates environ automatically, list of vectors of avail rooms for each facility
@@ -797,12 +818,7 @@ run_abm_iteration <- function(n_days = 72,
           values_from = n
         ) |>
         ungroup() |>
-        replace_na(list(
-          risk_1 = 0,
-          risk_2 = 0,
-          risk_3 = 0,
-          risk_4 = 0
-        )) |>
+        replace_na(list(risk_1 = 0, risk_2 = 0, risk_3 = 0, risk_4 = 0)) |>
         filter(!is.na(hcup_id)) |>
         select(hcup_id, risk_1, risk_2, risk_3, risk_4) |>
         left_join(
@@ -828,18 +844,21 @@ run_abm_iteration <- function(n_days = 72,
           if (n_to_q_for_f > 0) {
             ## people  to be sent to queue
             n_in_prev_q = sum(queue_viz_keys_df$hcup_id == names(n_in_queue)[f])
+            n_symp_in_q = sum(adj_queue_los_df$hcup_id == names(n_in_queue)[f])
+            n_in_prev_q = n_in_prev_q -  n_symp_in_q
             if (n_in_prev_q >= n_to_q_for_f) {
               ## if enough to just leave queue people in queue
               # n_to_leave = n_in_prev_q - n_to_q_for_f
               key_to_leave_in_q =
                 queue_viz_keys_df |>
                 filter(hcup_id == names(n_in_queue)[f]) |>
+                filter(!patid %in% adj_queue_los_df$patid) |> ## so symp queue patients enter
                 slice_sample(n = n_to_q_for_f) |>
                 pull(viz_key)
               leave_in_queue = c(leave_in_queue, key_to_leave_in_q)
             } else {
               stop(
-                "error at step 7c: more people from new infec & transfers need to go in the queue!!!!!"
+                paste0("error at step 7c: more people from new infec & transfers need to go in the queue!! Facility:", names(n_in_queue)[f], ". Loop iteration", f)
               )
             }
           }
@@ -881,10 +900,19 @@ run_abm_iteration <- function(n_days = 72,
       ## check all the right people: all(sort(to_admit_pat_7_1$patid) == sort(new_rooms$patid))
       # update occupancy of rooms from 7d.3 assignments
       room_list$occup[new_rooms$assigned_room] = new_rooms$patid
+      ## adjust LOS if queue pat is now SYMP
+      if(nrow(adj_queue_los_df) > 0) {
+        to_admit_df <- hcup |>
+          filter(viz_key %in% to_admit_pat_7_1$viz_key & !viz_key %in% all_admit_keys) |>
+          left_join(adj_queue_los_df |> select(patid, viz_key, los_sim, adj_los)) |>
+          mutate(los_sim = if_else(!is.na(adj_los), adj_los, los_sim)) |>
+          select(-adj_los)
+        print(paste0("There are", nrow(adj_queue_los_df), " symp pat from the queue on day ", d))
+      } else {
+        to_admit_df <- hcup |>
+          filter(viz_key %in% to_admit_pat_7_1$viz_key & !viz_key %in% all_admit_keys)
+      }
       # add patient information for transfer/queue admits
-      to_admit_df <- hcup |>
-        filter(viz_key %in% to_admit_pat_7_1$viz_key &
-                 !viz_key %in% all_admit_keys)
       all_admit_keys = c(all_admit_keys, to_admit_df$viz_key) ## dynamic vector of all used keys
       to_admit_pat = to_admit_df$patid
       pat_list$los_sim[to_admit_pat] = to_admit_df$los_sim
@@ -912,8 +940,9 @@ run_abm_iteration <- function(n_days = 72,
         pat_list$mdc[to_admit_pat] = 6L
         # pat_list$facility     # this stays as in
         pat_list$risk_mor[idx_symp_pat_nihosp] = 1L # could assign risk differently but
-        # ~90% pat are in risk 1-3 so doesn't make a big difference & only
-        # using this for assigning icu/non at admission
+          # ~90% pat are in risk 1-3 so doesn't make a big difference & only
+          # using this for assigning icu/non at admission
+        pat_list$new_symp_viz = 1L
       }
       ## update disease status for any first time visit patients (from queue)
       if (any(to_admit_df$viz_num == 1)) {
@@ -929,24 +958,16 @@ run_abm_iteration <- function(n_days = 72,
           filter(class %in% c("R", "HAI", "T")) |>
           pull(patid)
         if (length(idx_to_symp) > 0) {
-          symptomatic[idx_to_symp] = round(triangle::rtriangle(
-            n = length(idx_to_symp),
-            a = 5,
-            b = 15,
-            c = 10
-          ), 0)
+          symptomatic[idx_to_symp] =
+            round(triangle::rtriangle(n = length(idx_to_symp), a = 5, b = 15, c = 10), 0)
         }
         ## patients entering at incubation
         idx_to_incub = cdi_admits |>
           filter(class == "CAI") |>
           pull(patid)
         if (length(idx_to_incub) > 0) {
-          incubation[idx_to_incub] = round(triangle::rtriangle(
-            n = length(idx_to_incub),
-            a = 3,
-            b = 9,
-            c = 6
-          ))
+          incubation[idx_to_incub] =
+            round(triangle::rtriangle(n = length(idx_to_incub), a = 3, b = 9, c = 6))
         }
         ## non CDI patients
         ## set probability of noCDI patients to be asymp at first viz
@@ -954,11 +975,8 @@ run_abm_iteration <- function(n_days = 72,
           first_visits |>
           filter(viz_num == 1 & !patid %in% cdi_admits$patid) |>
           pull(patid)
-        idx_pat_asymp = maybe_asymp_pat[which(rbinom(
-          length(maybe_asymp_pat),
-          size = 1,
-          prob = 0.00785
-        ) == 1)]
+        idx_pat_asymp =
+          maybe_asymp_pat[which(rbinom(length(maybe_asymp_pat), size = 1, prob = 0.00785) == 1)]
         asymptomatic[idx_pat_asymp] = round(rweibull(length(idx_pat_asymp), 1, 43), 0) + 1
         idx_pat_sus = maybe_asymp_pat[!maybe_asymp_pat %in% idx_pat_asymp]
         susceptible[idx_pat_sus] = 1L
@@ -1012,12 +1030,7 @@ run_abm_iteration <- function(n_days = 72,
           values_from = n
         ) |>
         ungroup() |>
-        replace_na(list(
-          risk_1 = 0,
-          risk_2 = 0,
-          risk_3 = 0,
-          risk_4 = 0
-        )) |>
+        replace_na(list(risk_1 = 0, risk_2 = 0, risk_3 = 0, risk_4 = 0)) |>
         filter(!is.na(hcup_id)) |>
         select(hcup_id, risk_1, risk_2, risk_3, risk_4) |>
         left_join(
@@ -1177,7 +1190,7 @@ run_abm_iteration <- function(n_days = 72,
         seed = SEED
       )
       if (length(pat_in_hosp_idx) != length(order_pat_rooms_idx)) {
-        browser()
+        # browser()
         tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE) |> print(n = 10)
         tibble(pat = pat_in_hosp_idx) |> count(pat, sort = TRUE) |> print(n = 10)
         # who doesn't have a room??
