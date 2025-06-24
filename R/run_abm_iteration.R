@@ -768,6 +768,9 @@ run_abm_iteration <- function(n_days = 72,
 
       ## check if any patients to be admitted are actually already in the hospital
       idx_already_inhosp = to_admit_pat_7_1$patid[to_admit_pat_7_1$patid %in% room_list$occup@x]
+
+      if(d == 60) {browser()}
+
       if (length(idx_already_inhosp) > 0) {
         print(
           "trying to admit someone that is currently in the hosp->keeping them in queue, l566"
