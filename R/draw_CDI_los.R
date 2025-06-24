@@ -30,11 +30,12 @@ draw_CDI_los <- function(dist = CDI_los_dist_mdc_tran6days, current_day, transfe
   max_los_facil <- hospid_max |>
     filter(hcup_id == hosp_id) |>
     pull(max_los)
-  if(current_day == 0 & transfer == 0) {
+  if(current_day == 0 & (transfer == 0 | is.na(transfer))) {
     transfer = 1
     md_cat = 6
   }
   tran_update = case_when(
+    is.na(transfer) ~ "non_tran",
     transfer == 1 ~ "non_tran",
     transfer == 2 ~ "tran_last",
     transfer == 3 ~ "tran_not_last"
