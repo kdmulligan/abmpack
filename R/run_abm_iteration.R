@@ -762,18 +762,19 @@ run_abm_iteration <- function(n_days = 72,
         filter(patid %in% new_symp_pat$patid) |>
         inner_join(hcup, join_by(patid, viz_key, hcup_id, adrgriskmortality)) |>
         select(patid, viz_key, hcup_id, los_sim, tran_seg, mdc)
-      new_los <- rep(NA, nrow(adj_queue_los_df))
-      for (s in 1:nrow(adj_queue_los_df)) {
-        # s = 1
-        new_los[s] = draw_CDI_los(
-          current_day = 0,
-          transfer = adj_queue_los_df$tran_seg[s],
-          md_cat = adj_queue_los_df$mdc[s],
-          hcup_los = adj_queue_los_df$los_sim[s],
-          hosp_id = adj_queue_los_df$hcup_id[s]
-        )
+      if (nrow(adj_queue_los_df) > 0) {
+        new_los <- rep(NA, nrow(adj_queue_los_df))
+        for (s in 1:nrow(adj_queue_los_df)) {
+          new_los[s] = draw_CDI_los(
+            current_day = 0,
+            transfer = adj_queue_los_df$tran_seg[s],
+            md_cat = adj_queue_los_df$mdc[s],
+            hcup_los = adj_queue_los_df$los_sim[s],
+            hosp_id = adj_queue_los_df$hcup_id[s]
+          )
+        }
+        adj_queue_los_df = adj_queue_los_df |> mutate(adj_los = new_los)
       }
-      adj_queue_los_df = adj_queue_los_df |> mutate(adj_los = new_los)
       # 7d.1: get available rooms per facility
       update_available_rooms(rm_list = room_list, hcupids_vec = hcup_id_vec)
       ## R func that updates environ automatically, list of vectors of avail rooms for each facility
