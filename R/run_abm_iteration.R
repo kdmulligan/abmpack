@@ -758,14 +758,13 @@ run_abm_iteration <- function(n_days = 72,
       # 7c: get queue patients to admit
       # queue_viz_keys_df
       ## adjust LOS for symp queue patients
-      browser()
       adj_queue_los_df = queue_viz_keys_df |>
         filter(patid %in% new_symp_pat$patid) |>
         inner_join(hcup, join_by(patid, viz_key, hcup_id, adrgriskmortality)) |>
         select(patid, viz_key, hcup_id, los_sim, tran_seg, mdc)
       new_los <- rep(NA, nrow(adj_queue_los_df))
       for (s in 1:nrow(adj_queue_los_df)) {
-        s = 1
+        # s = 1
         new_los[s] = draw_CDI_los(
           current_day = 0,
           transfer = adj_queue_los_df$tran_seg[s],
