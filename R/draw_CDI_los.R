@@ -34,12 +34,12 @@ draw_CDI_los <- function(dist = CDI_los_dist_mdc_tran6days, current_day, transfe
     transfer = 1
     md_cat = 6
   }
-  transfer = case_when(
+  tran_update = case_when(
     transfer == 1 ~ "non_tran",
     transfer == 2 ~ "tran_last",
     transfer == 3 ~ "tran_not_last"
   )
-  dist_max <- max(which(dist[[transfer]][[paste0("mdc_", md_cat)]] != 0))
+  dist_max <- max(which(dist[[tran_update]][[paste0("mdc_", md_cat)]] != 0))
   # print(paste0("max_los_facil: ", max_los_facil, "; dist_max: ", dist_max))
   max_to_use <- min(max_los_facil, dist_max)
 
@@ -62,7 +62,7 @@ draw_CDI_los <- function(dist = CDI_los_dist_mdc_tran6days, current_day, transfe
       }
     ,
     arg1 = current_day,
-    arg2 = transfer,
+    arg2 = tran_update,
     arg3 = md_cat,
     arg4 = hcup_los,
     arg5 = max_to_use
