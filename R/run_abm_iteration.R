@@ -806,8 +806,6 @@ run_abm_iteration <- function(n_days = 72,
       ## check if any patients to be admitted are actually already in the hospital
       idx_already_inhosp = to_admit_pat_7_1$patid[to_admit_pat_7_1$patid %in% room_list$occup@x]
 
-      # if(d == 60) {browser()}
-
       if (length(idx_already_inhosp) > 0) {
         print(
           "trying to admit someone that is currently in the hosp->keeping them in queue, l566"
@@ -1208,8 +1206,9 @@ run_abm_iteration <- function(n_days = 72,
         cur_room_type = pat_room_type,
         seed = SEED
       )
+      if(d == 44) {browser()}
       if (length(pat_in_hosp_idx) != length(order_pat_rooms_idx)) {
-        # browser()
+
         tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE) |> print(n = 10)
         tibble(pat = pat_in_hosp_idx) |> count(pat, sort = TRUE) |> print(n = 10)
         # who doesn't have a room??
