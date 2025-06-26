@@ -874,6 +874,7 @@ run_abm_iteration <- function(n_days = 72,
       queue_viz_keys_df =
         queue_viz_keys_df |>
         filter(viz_key %in% leave_in_queue)
+      print(dim(to_admit_pat_7_1))
 
       # 7d.3: assign rooms for patients from 7a, 7b, 7c
       new_rooms <- vector("list", length(hcup_id_vec))
@@ -899,6 +900,7 @@ run_abm_iteration <- function(n_days = 72,
           )
       }
       new_rooms <- bind_rows(new_rooms)
+      print(dim(new_rooms))
       if(d == 69) {browser()}
       ## check all the right people: all(sort(to_admit_pat_7_1$patid) == sort(new_rooms$patid))
       # update occupancy of rooms from 7d.3 assignments
