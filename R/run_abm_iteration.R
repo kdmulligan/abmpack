@@ -834,6 +834,7 @@ run_abm_iteration <- function(n_days = 72,
 
       n_in_queue =
         num_in_q_by_risk(risks_beds = to_admit_summ) ## list with num by risk / facility
+      if(d == 69) {browser()}
       ## will everyone fit?
       ppl_to_queue = sapply(n_in_queue, any) |> any()
       leave_in_queue = c() ## initalize vector to hold queue patient visits
