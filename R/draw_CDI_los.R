@@ -49,14 +49,16 @@ draw_CDI_los <- function(dist = CDI_los_dist_mdc_tran6days, current_day, transfe
       if ((arg1 + 1 == arg5) &  arg1 < (max(which(dist[[arg2]][[paste0("mdc_", arg3)]] != 0)) - 1)) {
         # print("opt1")
         arg5
+      } else if (arg1 == arg4 & arg1 == arg5) {
+        arg1 + 1
       } else if (arg1 < (max(which(dist[[arg2]][[paste0("mdc_", arg3)]] != 0)) - 1)) {
         # print(paste0("opt2.  day: ", arg1, "; transfer: ", arg2, "; mdc: ", arg3,
                      # "; hcup_los: ", arg4, "; max_to_use: ", arg5))
         sample(
-          x = (arg1 + 1):arg5,
-          size = 1,
-          prob = dist[[arg2]][[paste0("mdc_", arg3)]][(arg1 + 1):arg5]
-        )
+            x = (arg1 + 1):arg5,
+            size = 1,
+            prob = dist[[arg2]][[paste0("mdc_", arg3)]][(arg1 + 1):arg5]
+          )
       } else {
         # print("opt3")
         max(arg1 + 1, arg4)
