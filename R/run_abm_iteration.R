@@ -834,7 +834,6 @@ run_abm_iteration <- function(n_days = 72,
 
       n_in_queue =
         num_in_q_by_risk(risks_beds = to_admit_summ) ## list with num by risk / facility
-      if(d == 69) {browser()}
       ## will everyone fit?
       ppl_to_queue = sapply(n_in_queue, any) |> any()
       leave_in_queue = c() ## initalize vector to hold queue patient visits
@@ -855,6 +854,7 @@ run_abm_iteration <- function(n_days = 72,
                 queue_viz_keys_df |>
                 filter(hcup_id == names(n_in_queue)[f]) |>
                 filter(!patid %in% adj_queue_los_df$patid) |> ## so symp queue patients enter
+                filter(patid %in% to_admit_pat_7_1$patid) |>
                 slice_sample(n = n_to_q_for_f) |>
                 pull(viz_key)
               leave_in_queue = c(leave_in_queue, key_to_leave_in_q)
@@ -899,6 +899,7 @@ run_abm_iteration <- function(n_days = 72,
           )
       }
       new_rooms <- bind_rows(new_rooms)
+      if(d == 69) {browser()}
       ## check all the right people: all(sort(to_admit_pat_7_1$patid) == sort(new_rooms$patid))
       # update occupancy of rooms from 7d.3 assignments
       room_list$occup[new_rooms$assigned_room] = new_rooms$patid
