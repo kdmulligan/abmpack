@@ -606,13 +606,13 @@ run_abm_iteration <- function(n_days = 72,
               )
           } else if (idx_now_in_symp[s] %in% idx_symp_pat_in_hosp) {
             ## pat in the hospital
-            if(d == 57) {
-              print(paste0("ADJ inhosp LOS. current_day: ", pat_list$los_sim[idx_now_in_symp[s]] - pat_list$days_rem[idx_now_in_symp[s]],
-                           " transfer: ", pat_list$tran_stat[idx_now_in_symp[s]],
-                           " md_cat: ", pat_list$mdc[idx_now_in_symp[s]],
-                           " hcup_los: ", pat_list$los_sim[idx_now_in_symp[s]],
-                           " hosp_id: ", pat_list$facility[idx_now_in_symp[s]]))
-            }
+            # if(d == 57) {
+            #   print(paste0("ADJ inhosp LOS. current_day: ", pat_list$los_sim[idx_now_in_symp[s]] - pat_list$days_rem[idx_now_in_symp[s]],
+            #                " transfer: ", pat_list$tran_stat[idx_now_in_symp[s]],
+            #                " md_cat: ", pat_list$mdc[idx_now_in_symp[s]],
+            #                " hcup_los: ", pat_list$los_sim[idx_now_in_symp[s]],
+            #                " hosp_id: ", pat_list$facility[idx_now_in_symp[s]]))
+            # }
             new_los[s] <-
               draw_CDI_los(
                 current_day = pat_list$los_sim[idx_now_in_symp[s]] - pat_list$days_rem[idx_now_in_symp[s]],
@@ -773,13 +773,13 @@ run_abm_iteration <- function(n_days = 72,
       if (nrow(adj_queue_los_df) > 0) {
         new_los <- rep(NA, nrow(adj_queue_los_df))
         for (s in 1:nrow(adj_queue_los_df)) {
-          if(d == 57) {
-            print(paste0("ADJ Q LOS. current_day: ", pat_list$los_sim[idx_now_in_symp[s]] - pat_list$days_rem[idx_now_in_symp[s]],
-                         " transfer: ", pat_list$tran_stat[idx_now_in_symp[s]],
-                         " md_cat: ", pat_list$mdc[idx_now_in_symp[s]],
-                         " hcup_los: ", pat_list$los_sim[idx_now_in_symp[s]],
-                         " hosp_id: ", pat_list$facility[idx_now_in_symp[s]]))
-          }
+          # if(d == 57) {
+          #   print(paste0("ADJ Q LOS. current_day: ", pat_list$los_sim[idx_now_in_symp[s]] - pat_list$days_rem[idx_now_in_symp[s]],
+          #                " transfer: ", pat_list$tran_stat[idx_now_in_symp[s]],
+          #                " md_cat: ", pat_list$mdc[idx_now_in_symp[s]],
+          #                " hcup_los: ", pat_list$los_sim[idx_now_in_symp[s]],
+          #                " hosp_id: ", pat_list$facility[idx_now_in_symp[s]]))
+          # }
           new_los[s] = draw_CDI_los(
             current_day = 0,
             transfer = adj_queue_los_df$tran_seg[s],
