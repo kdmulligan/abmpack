@@ -614,6 +614,13 @@ run_abm_iteration <- function(n_days = 72,
                 hcup_los = pat_list$los_sim[idx_now_in_symp[s]],
                 hosp_id = pat_list$facility[idx_now_in_symp[s]]
               )
+            if(d == 57) {
+              print(paste0("current_day:", pat_list$los_sim[idx_now_in_symp[s]] - pat_list$days_rem[idx_now_in_symp[s]],
+                           "transfer:", pat_list$tran_stat[idx_now_in_symp[s]],
+                           "md_cat:", pat_list$mdc[idx_now_in_symp[s]],
+                           "hcup_los:", pat_list$los_sim[idx_now_in_symp[s]],
+                           "hosp_id:", pat_list$facility[idx_now_in_symp[s]]))
+            }
           }
         }
         ## update LOS details if already in the hospital
@@ -772,6 +779,13 @@ run_abm_iteration <- function(n_days = 72,
             hcup_los = adj_queue_los_df$los_sim[s],
             hosp_id = adj_queue_los_df$hcup_id[s]
           )
+          if(d == 57) {
+            print(paste0("current_day:", pat_list$los_sim[idx_now_in_symp[s]] - pat_list$days_rem[idx_now_in_symp[s]],
+                         "transfer:", pat_list$tran_stat[idx_now_in_symp[s]],
+                         "md_cat:", pat_list$mdc[idx_now_in_symp[s]],
+                         "hcup_los:", pat_list$los_sim[idx_now_in_symp[s]],
+                         "hosp_id:", pat_list$facility[idx_now_in_symp[s]]))
+          }
         }
         adj_queue_los_df = adj_queue_los_df |> mutate(adj_los = new_los)
       }
@@ -874,7 +888,7 @@ run_abm_iteration <- function(n_days = 72,
       queue_viz_keys_df =
         queue_viz_keys_df |>
         filter(viz_key %in% leave_in_queue)
-      print(dim(to_admit_pat_7_1))
+      # print(dim(to_admit_pat_7_1))
 
       # 7d.3: assign rooms for patients from 7a, 7b, 7c
       new_rooms <- vector("list", length(hcup_id_vec))
@@ -900,8 +914,7 @@ run_abm_iteration <- function(n_days = 72,
           )
       }
       new_rooms <- bind_rows(new_rooms)
-      print(dim(new_rooms))
-      if(d == 69) {browser()}
+      # print(dim(new_rooms))
       ## check all the right people: all(sort(to_admit_pat_7_1$patid) == sort(new_rooms$patid))
       # update occupancy of rooms from 7d.3 assignments
       room_list$occup[new_rooms$assigned_room] = new_rooms$patid
