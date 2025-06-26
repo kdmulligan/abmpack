@@ -1206,7 +1206,7 @@ run_abm_iteration <- function(n_days = 72,
         cur_room_type = pat_room_type,
         seed = SEED
       )
-      if(d == 44) {browser()}
+      # if(d == 44) {browser()}
       if (length(pat_in_hosp_idx) != length(order_pat_rooms_idx)) {
 
         tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE) |> print(n = 10)
