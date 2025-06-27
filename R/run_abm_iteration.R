@@ -768,6 +768,7 @@ run_abm_iteration <- function(n_days = 72,
       # queue_viz_keys_df
       ## adjust LOS for symp queue patients
       adj_queue_los_df = queue_viz_keys_df |>
+        select(-los_sim) |>
         filter(patid %in% new_symp_pat$patid) |>
         inner_join(hcup, join_by(patid, viz_key, hcup_id, adrgriskmortality)) |>
         select(patid, viz_key, hcup_id, los_sim, tran_seg, mdc)
