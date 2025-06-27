@@ -893,6 +893,7 @@ run_abm_iteration <- function(n_days = 72,
                 df_queue = q_and_symp_pat |>
                   slice_sample(n = n_to_q_for_f)
                 key_to_leave_in_q = pull(df_queue, patid)
+                print(key_to_leave_in_q)
                 leave_in_queue = c(leave_in_queue, key_to_leave_in_q)
                 ## adjust `idx_symp_pat_nihosp`
                 symp_adj = df_queue |> filter(viz_cat == "symp") |> pull(patid)
