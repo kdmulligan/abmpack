@@ -904,7 +904,7 @@ run_abm_iteration <- function(n_days = 72,
         }
         }
       }
-      if(d == 42) {browser()}
+
       ## adjust queue. `los_sim` var should only be included in queue patients
           ## if they are a new symp viz, otherwise will mess with when/how those patients are admitted
       queue_viz_keys_df =
