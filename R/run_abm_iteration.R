@@ -767,6 +767,7 @@ run_abm_iteration <- function(n_days = 72,
       # 7c: get queue patients to admit
       # queue_viz_keys_df
       ## adjust LOS for symp queue patients
+      browser()
       adj_queue_los_df = queue_viz_keys_df |>
         select(-los_sim) |>
         filter(patid %in% new_symp_pat$patid) |>
