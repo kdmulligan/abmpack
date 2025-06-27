@@ -767,7 +767,7 @@ run_abm_iteration <- function(n_days = 72,
       # 7c: get queue patients to admit
       # queue_viz_keys_df
       ## adjust LOS for symp queue patients
-      browser()
+      # browser()
       adj_queue_los_df = queue_viz_keys_df |>
         select(-los_sim) |>
         filter(patid %in% new_symp_pat$patid) |>
@@ -853,7 +853,7 @@ run_abm_iteration <- function(n_days = 72,
       ## will everyone fit?
       ppl_to_queue = sapply(n_in_queue, any) |> any()
       leave_in_queue = c() ## initalize vector to hold queue patient visits
-
+      print(paste0("total patient to queue: ", sum(sapply(n_in_queue, sum))))
       if (ppl_to_queue == TRUE) {
         print("patients going to queue at queue/tran/symp patients, l603")
         for (f in 1:length(n_in_queue)) {
@@ -888,7 +888,7 @@ run_abm_iteration <- function(n_days = 72,
                     TRUE ~ "tran"
                   )) |>
                 filter(viz_cat != "tran")
-              print(q_and_symp_pat)
+              # print(q_and_symp_pat)
               tot_q_and_symp_pat = nrow(q_and_symp_pat)
               if(tot_q_and_symp_pat >= n_to_q_for_f) {
                 ## select queue
@@ -908,19 +908,20 @@ run_abm_iteration <- function(n_days = 72,
         }
         }
       }
-      print(leave_in_queue)
-      if(d == 42) {browser()}
-
+      # if(d == 42) {browser()}
+      print(paste0("dim queue before: ", dim(queue_viz_keys_df)))
       ## adjust queue. `los_sim` var should only be included in queue patients
           ## if they are a new symp viz, otherwise will mess with when/how those patients are admitted
       queue_viz_keys_df =
         queue_viz_keys_df |>
         filter(patid %in% leave_in_queue)
+      print(paste0("dim queue after: ", dim(queue_viz_keys_df)))
       ## adjust patients to admit
+      print(paste0("dim admit pat df before: ", dim(to_admit_pat_7_1)))
       to_admit_pat_7_1 =
         to_admit_pat_7_1 |>
         filter(!patid %in% leave_in_queue)
-
+      print(paste0("dim admit pat df after: ", dim(to_admit_pat_7_1)))
       # 7d.3: assign rooms for patients from 7a, 7b, 7c
       new_rooms <- vector("list", length(hcup_id_vec))
       # assign rooms
