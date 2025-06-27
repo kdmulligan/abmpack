@@ -886,6 +886,7 @@ run_abm_iteration <- function(n_days = 72,
                     TRUE ~ "tran"
                   )) |>
                 filter(viz_cat != "tran")
+              print(q_and_symp_pat)
               tot_q_and_symp_pat = nrow(q_and_symp_pat)
               if(tot_q_and_symp_pat >= n_to_q_for_f) {
                 ## select queue
@@ -904,6 +905,7 @@ run_abm_iteration <- function(n_days = 72,
         }
         }
       }
+      print(leave_in_queue)
       if(d == 42) {browser()}
 
       ## adjust queue. `los_sim` var should only be included in queue patients
