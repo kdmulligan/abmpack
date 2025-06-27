@@ -208,7 +208,8 @@ run_abm_iteration <- function(n_days = 72,
     patid = numeric(),
     viz_key = numeric(),
     hcup_id = numeric(),
-    adrgriskmortality = numeric()
+    adrgriskmortality = numeric(),
+    los_sim = numeric()
   )  ## vector of viz keys for patients in queue
 
   ## lists of rooms per facility (all available at initialization here)
@@ -850,7 +851,7 @@ run_abm_iteration <- function(n_days = 72,
       ## will everyone fit?
       ppl_to_queue = sapply(n_in_queue, any) |> any()
       leave_in_queue = c() ## initalize vector to hold queue patient visits
-      if(d == 42) {browser()}
+
       if (ppl_to_queue == TRUE) {
         print("patients going to queue at queue/tran/symp patients, l603")
         for (f in 1:length(n_in_queue)) {
@@ -870,25 +871,49 @@ run_abm_iteration <- function(n_days = 72,
                 filter(!patid %in% adj_queue_los_df$patid) |> ## so symp queue patients enter
                 filter(patid %in% to_admit_pat_7_1$patid) |>
                 slice_sample(n = n_to_q_for_f) |>
-                pull(viz_key)
+                pull(patid)
               leave_in_queue = c(leave_in_queue, key_to_leave_in_q)
             } else {
-              stop(
-                paste0("error at step 7c: more people from new infec & transfers need to go in the queue!! Facility:", names(n_in_queue)[f], ". Loop iteration", f)
-              )
+              ## need new queue patients from old queue and new symp patients
+              q_and_symp_pat =
+                to_admit_pat_7_1 |>
+                filter(hcup_id == names(n_in_queue)[f]) |>
+                filter(!patid %in% adj_queue_los_df$patid) |>
+                mutate(
+                  viz_cat = case_when(
+                    !is.na(los_sim) ~ "symp",
+                    patid %in% queue_viz_keys_df$patid ~ "queue",
+                    TRUE ~ "tran"
+                  )) |>
+                filter(viz_cat != "tran")
+              tot_q_and_symp_pat = nrow(q_and_symp_pat)
+              if(tot_q_and_symp_pat >= n_to_q_for_f) {
+                ## select queue
+                df_queue = q_and_symp_pat |>
+                  slice_sample(n = n_to_q_for_f)
+                key_to_leave_in_q = pull(df_queue, patid)
+                leave_in_queue = c(leave_in_queue, key_to_leave_in_q)
+                ## adjust `idx_symp_pat_nihosp`
+                symp_adj = df_queue |> filter(viz_cat == "symp") |> pull(patid)
+                idx_symp_pat_nihosp = idx_symp_pat_nihosp[!idx_symp_pat_nihosp %in% symp_adj]
+                ## not adjusting `symptomatic` days status and letting them enter a day or so later
+              } else {
+                stop("error at step 7c: more people from transfers need to go in the queue!!!!!")
             }
           }
         }
+        }
       }
+      if(d == 42) {browser()}
+      ## adjust queue. `los_sim` var should only be included in queue patients
+          ## if they are a new symp viz, otherwise will mess with when/how those patients are admitted
+      queue_viz_keys_df =
+        queue_viz_keys_df |>
+        filter(patid %in% leave_in_queue)
       ## adjust patients to admit
       to_admit_pat_7_1 =
         to_admit_pat_7_1 |>
-        filter(!viz_key %in% leave_in_queue)
-      ## adjust queue  ?? NOT SURE THIS IS QUITE RIGHT
-      queue_viz_keys_df =
-        queue_viz_keys_df |>
-        filter(viz_key %in% leave_in_queue)
-      # print(dim(to_admit_pat_7_1))
+        filter(!patid %in% leave_in_queue)
 
       # 7d.3: assign rooms for patients from 7a, 7b, 7c
       new_rooms <- vector("list", length(hcup_id_vec))
@@ -948,20 +973,25 @@ run_abm_iteration <- function(n_days = 72,
         filter(!is.na(days2next))
       pat_list$days_to_next_viz[next_viz_dat$patid] = next_viz_dat$days2next
 
-      # add patient info for newly symp pat admits  (idx_symp_pat_nihosp will need
-      ## to be adjusted here if have to edit queue to include new symp not in hosp)
-      if (length(idx_symp_pat_nihosp) > 0) {
+      # add patient info for newly symp pat admits  (Condition used to be
+      # length(idx_symp_pat_nihosp) > 0 will need. Was adjusted here b/c queue
+      # needed to include new symp not in hosp)
+      if (sum(!is.na(to_admit_pat_7_1$los_sim)) > 0) {
+        new_symp_admit = to_admit_pat_7_1 |> filter(!is.na(los_sim))
+        if(any(!is.na(new_symp_admit$viz_key))) {stop("error step 7d: viz key patients are trying to be admitted with the new symptomatic visits")}
+        idx_new_symp_admit = new_symp_admit$patid
         ## this is updated in step 3 for incubation period
-        pat_list$los_sim[idx_symp_pat_nihosp] = new_symp_pat$los_sim
-        pat_list$days_rem[idx_symp_pat_nihosp] = new_symp_pat$los_sim
-        pat_list$tran_stat[idx_symp_pat_nihosp] = 1L
-        pat_list$mdc[to_admit_pat] = 6L
-        # pat_list$facility     # this stays as in
-        pat_list$risk_mor[idx_symp_pat_nihosp] = 1L # could assign risk differently but
-          # ~90% pat are in risk 1-3 so doesn't make a big difference & only
-          # using this for assigning icu/non at admission
-        pat_list$new_symp_viz = 1L
+        pat_list$los_sim[idx_new_symp_admit] = new_symp_admit$los_sim
+        pat_list$days_rem[idx_new_symp_admit] = new_symp_admit$los_sim
+        pat_list$tran_stat[idx_new_symp_admit] = 1L
+        pat_list$mdc[idx_new_symp_admit] = 6L
+        # pat_list$facility     # this stays as is from previous visit
+        pat_list$risk_mor[idx_new_symp_admit] = 1L # could assign risk differently but
+        # ~90% pat are in risk 1-3 so doesn't make a big difference & only
+        # using this for assigning icu/non at admission
+        pat_list$new_symp_viz[idx_new_symp_admit] = 1L
       }
+
       ## update disease status for any first time visit patients (from queue)
       if (any(to_admit_df$viz_num == 1)) {
         first_visits = filter(to_admit_df, viz_num == 1)
