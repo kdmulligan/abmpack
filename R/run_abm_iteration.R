@@ -850,6 +850,7 @@ run_abm_iteration <- function(n_days = 72,
       ## will everyone fit?
       ppl_to_queue = sapply(n_in_queue, any) |> any()
       leave_in_queue = c() ## initalize vector to hold queue patient visits
+      if(d == 42) {browser()}
       if (ppl_to_queue == TRUE) {
         print("patients going to queue at queue/tran/symp patients, l603")
         for (f in 1:length(n_in_queue)) {
