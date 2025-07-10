@@ -42,7 +42,7 @@ utils::globalVariables(
 run_abm_iteration <- function(n_days = 72,
                               t_symp_room = 0.0005, t_hcw_room = 0.0005,
                               t_room_hcw = 0.0005, t_room_patge65 = 0.0005,
-                              t_prob_room_contam_init = 0.005, l_poi_latent = 1,
+                              t_prob_room_contam_init = 0.005, l_binom_latent = 1,
                               ind_col_pat_trans = 1, ind_asymp_pat_trans = 1,
                               ind_asymp_hcw_trans = 1, ind_recur_trans = 1,
                               ind_transfer_pat_trans = 1,
@@ -58,7 +58,7 @@ run_abm_iteration <- function(n_days = 72,
   tau_room_hcw = t_room_hcw
   tau_room_patge65 = t_room_patge65
   tau_prob_room_contam_init = t_prob_room_contam_init
-  lambda_poi_latent = l_poi_latent
+  lambda_binom_latent = l_binom_latent
   ## research question indicators
   ## RQ 1
   incl_col_pat_trans = ind_col_pat_trans
@@ -1569,7 +1569,10 @@ run_abm_iteration <- function(n_days = 72,
         idx_new_pat_latent = idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (susceptible@i + 1)]
 
         ## set number of days in incubation period for newly infected patients
-        latent[idx_new_pat_latent] = rpois(n = length(idx_new_pat_latent), lambda = lambda_poi_latent)
+        ## param = prob in binom dist to # days is either = to 2 or 3
+        latent[idx_new_pat_latent] = (rbinom(n = length(idx_new_pat_latent), size = 1, prob = lambda_binom_latent) + 2)
+            ## old: param = lambda in poisson dist
+            # latent[idx_new_pat_latent] = rpois(n = length(idx_new_pat_latent), lambda = lambda_poi_latent)
         # previously: latent[idx_new_pat_latent] = 3L
         ## new latent period patients are no longer susceptible
         susceptible[idx_new_pat_latent] = 0L
