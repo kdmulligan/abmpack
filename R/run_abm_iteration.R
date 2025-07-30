@@ -24,6 +24,9 @@ utils::globalVariables(
 #' @param ind_asymp_hcw_trans indicator for asymptomatic hcw transmission
 #' @param ind_recur_trans indicator for recurrent patient transmission
 #' @param ind_transfer_pat_trans indicator for transfer patient transmission
+#' @param ind_revisit_pat_trans indicator for revisit patient tranmission
+#' @param revisit_n_days number of days to consider for a revisit. Must be less
+#' than or equal to 6. Only important to set if setting `ind_revisit_pat_trans` to zero.
 #' @param SEED seed for the simulation
 #'
 #' @return numeric value with total number of observed cases
@@ -45,8 +48,8 @@ run_abm_iteration <- function(n_days = 72,
                               t_prob_room_contam_init = 0.005, l_binom_latent = 1,
                               ind_col_pat_trans = 1, ind_asymp_pat_trans = 1,
                               ind_asymp_hcw_trans = 1, ind_recur_trans = 1,
-                              ind_transfer_pat_trans = 1,
-                              SEED = 1212
+                              ind_transfer_pat_trans = 1, ind_revisit_pat_trans = 1,
+                              revisit_n_days = 6, SEED = 1212
                               )
 {
   set.seed(SEED)
@@ -68,7 +71,9 @@ run_abm_iteration <- function(n_days = 72,
   incl_recur_trans = ind_recur_trans
   ## RQ 3
   incl_transfer_pat_trans = ind_transfer_pat_trans
-  rq_tran_days_bn = 6          ## transfer def is interviz window of <= 6 days
+  ## RQ 4
+  incl_revisit_pat_trans = ind_revisit_pat_trans
+  rq_tran_days_bn = revisit_n_days          ## transfer def is interviz window of <= 6 days by default
 
   ## create list to hold results
   results = list(
@@ -979,6 +984,10 @@ run_abm_iteration <- function(n_days = 72,
       next_viz_dat = to_admit_df |>
         filter(!is.na(days2next))
       pat_list$days_to_next_viz[next_viz_dat$patid] = next_viz_dat$days2next
+      ## add days since prev viz for revisits, if not NA
+      next_viz_dat = to_admit_df |>
+              filter(!is.na(revisit_days_since))
+      pat_list$revisit_days_since[next_viz_dat$patid] = next_viz_dat$revisit_days_since
 
       # add patient info for newly symp pat admits  (Condition used to be
       # length(idx_symp_pat_nihosp) > 0 will need. Was adjusted here b/c queue
@@ -1171,6 +1180,10 @@ run_abm_iteration <- function(n_days = 72,
       next_viz_dat = to_admit_df |>
         filter(!is.na(days2next))
       pat_list$days_to_next_viz[next_viz_dat$patid] = next_viz_dat$days2next
+      ## add days since prev viz for revisits, if not NA
+      next_viz_dat = to_admit_df |>
+        filter(!is.na(revisit_days_since))
+      pat_list$revisit_days_since[next_viz_dat$patid] = next_viz_dat$revisit_days_since
 
       ## update disease status for first-visit patients (viz_num = 1)
       ## patients with viz_num > 1 do not get their disease status updated here
@@ -1409,7 +1422,7 @@ run_abm_iteration <- function(n_days = 72,
           idx_pat_symp = (symptomatic@i + 1)[!(symptomatic@i + 1) %in% recur_pat_today]
         }
 
-        # RESEARCH Q 3
+        # RESEARCH Q3
         # as-is/normal scenario: incl_transfer_pat_trans == 1 & incl_non_transfer_pat_transmission == 1
         # no change to idx_pat_symp & idx_pat_col vectors
         if (incl_transfer_pat_trans == 0) {
@@ -1419,6 +1432,15 @@ run_abm_iteration <- function(n_days = 72,
           # pat_list$tran_days_bn
           idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% transfers]
           idx_pat_col = idx_pat_col[!idx_pat_col %in% transfers]
+        }
+
+        # RESEARCH Q4
+        if(incl_revisit_pat_trans == 0) {
+          # rq_tran_days_bn
+          revisits = which(pat_list$revisit_days_since <= rq_tran_days_bn)
+          ## stop transmission from revisit patients
+          idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% revisits]
+          idx_pat_col = idx_pat_col[!idx_pat_col %in% revisits]
         }
 
         #9c.1: prob_room_symp_pat: symptomatic infection
