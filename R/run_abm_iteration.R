@@ -27,6 +27,7 @@ utils::globalVariables(
 #' @param ind_revisit_pat_trans indicator for revisit patient tranmission
 #' @param revisit_n_days number of days to consider for a revisit. Must be less
 #' than or equal to 6. Only important to set if setting `ind_revisit_pat_trans` to zero.
+#' @param ind_symp_trans indicator for symptomatic patient transmission
 #' @param SEED seed for the simulation
 #'
 #' @return numeric value with total number of observed cases
@@ -49,7 +50,7 @@ run_abm_iteration <- function(n_days = 72,
                               ind_col_pat_trans = 1, ind_asymp_pat_trans = 1,
                               ind_asymp_hcw_trans = 1, ind_recur_trans = 1,
                               ind_transfer_pat_trans = 1, ind_revisit_pat_trans = 1,
-                              revisit_n_days = 6, SEED = 1212
+                              revisit_n_days = 6, ind_symp_trans = 1, SEED = 1212
                               )
 {
   set.seed(SEED)
@@ -74,6 +75,8 @@ run_abm_iteration <- function(n_days = 72,
   ## RQ 4
   incl_revisit_pat_trans = ind_revisit_pat_trans
   rq_tran_days_bn = revisit_n_days          ## transfer def is interviz window of <= 6 days by default
+  ## RQ 5
+  incl_symp_trans = ind_symp_trans
 
   ## create list to hold results
   results = list(
@@ -91,46 +94,6 @@ run_abm_iteration <- function(n_days = 72,
   )
   tot_pat_newsymp_day = vector(mode = "numeric", length = n_days)
 
-  # ## import data ##################################################################
-  # hcup <- read_csv(
-  #   file = "Data/hcup_final_sim_2010dat.csv",
-  #   show_col_types = FALSE,
-  #   col_types = list(
-  #     patid = "i",
-  #     adate = "i",
-  #     ddate = "i",
-  #     days2next = "i",
-  #     amonth = "i",
-  #     dmonth = "i",
-  #     los_sim = "i",
-  #     aday_sim = "i",
-  #     viz_num = "i",
-  #     tran_seg = "i",
-  #     subseq_tran_seg = "i",
-  #     female = "i",
-  #     drg = "i",
-  #     mdc = "i",
-  #     dx_number = "i",
-  #     adrgriskmortality = "i",
-  #     tran_fr_snf = "i"
-  #   )
-  # ) |>
-  #   filter(aday_sim <= (total_days_sim + 15))
-  # ## ^^ patient / visit data is filtered to days <= number of sim days
-  # uniq_pat_dat <- read_csv(
-  #   file = "Data/hcup_uniq_patvar_2010dat.csv",
-  #   show_col_types = FALSE,
-  #   col_types = list(
-  #     patid = "i",
-  #     age_cat_n = "i",
-  #     aday_sim = "i",
-  #     los_rem_frday0 = "i"
-  #   )
-  # )
-  # rooms <- read_csv("Data/abm_rooms_uniq.csv", show_col_types = FALSE)
-  # hcws <- read_csv("Data/abm_hcws_uniq_withlookup.csv", show_col_types = FALSE)
-  # hcw_mvts <- read_csv("Data/abm_hcw_mvts_subset.csv", show_col_types = FALSE)
-  # hcw_lookup <- read_csv("Data/abm_hcw_lookup_ss.csv")
   ## step 0: INITIALIZATION ####################################################
 
   ## tran_seg note: 1 = non_tran, 2 = tran_last, 3 = tran_not_last
@@ -1441,6 +1404,15 @@ run_abm_iteration <- function(n_days = 72,
           ## stop transmission from revisit patients
           idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% revisits]
           idx_pat_col = idx_pat_col[!idx_pat_col %in% revisits]
+        }
+
+        # RESEARCH Q5
+        if (incl_symp_trans == 1) {
+          # as-is / normal
+          idx_pat_symp = (symptomatic@i + 1)
+        } else {
+          # eliminate symp transmission
+          idx_pat_symp = numeric()
         }
 
         #9c.1: prob_room_symp_pat: symptomatic infection
