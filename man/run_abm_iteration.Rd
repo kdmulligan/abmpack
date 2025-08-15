@@ -19,6 +19,7 @@ run_abm_iteration(
   ind_transfer_pat_trans = 1,
   ind_revisit_pat_trans = 1,
   revisit_n_days = 6,
+  ind_symp_trans = 1,
   SEED = 1212
 )
 }
@@ -35,6 +36,8 @@ run_abm_iteration(
 
 \item{t_prob_room_contam_init}{probability a room is contam prior value}
 
+\item{l_binom_latent}{binomial distribution probability for latent period prior value}
+
 \item{ind_col_pat_trans}{indicator for colonized patient transmission}
 
 \item{ind_asymp_pat_trans}{indicator for asymptomatic patient transmission}
@@ -50,9 +53,9 @@ run_abm_iteration(
 \item{revisit_n_days}{number of days to consider for a revisit. Must be less
 than or equal to 6. Only important to set if setting \code{ind_revisit_pat_trans} to zero.}
 
-\item{SEED}{seed for the simulation}
+\item{ind_symp_trans}{indicator for symptomatic patient transmission}
 
-\item{l_poi_latent}{poisson lambda value for latent per prior value}
+\item{SEED}{seed for the simulation}
 }
 \value{
 numeric value with total number of observed cases
