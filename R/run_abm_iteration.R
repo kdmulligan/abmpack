@@ -62,7 +62,6 @@ run_abm_iteration <- function(n_days = 72,
   tau_room_hcw = t_room_hcw
   tau_room_patge65 = t_room_patge65
   tau_prob_room_contam_init = t_prob_room_contam_init
-  lambda_binom_latent = l_binom_latent
   ## research question indicators
   ## RQ 1
   incl_col_pat_trans = ind_col_pat_trans
@@ -90,7 +89,10 @@ run_abm_iteration <- function(n_days = 72,
     obs_tot_symp = 0,
     obs_recur = 0,
     obs_hcw_asymp = 0,
-    obs_all_symp = 0
+    obs_all_symp = 0,
+    prev_feb = 0,
+    prev_mar = 0,
+    prop_rm_contam_end = 0
   )
   tot_pat_newsymp_day = vector(mode = "numeric", length = n_days)
 
@@ -296,9 +298,9 @@ run_abm_iteration <- function(n_days = 72,
   incubation[idx_to_incub] =
     ceiling(triangle::rtriangle(
       n = length(idx_to_incub),
-      a = 3,
-      b = 9,
-      c = 6
+      a = 1,
+      b = 10,
+      c = 4
     ) * runif(
       n = length(idx_to_incub),
       min = 0.1,
@@ -391,9 +393,9 @@ run_abm_iteration <- function(n_days = 72,
         if (length(to_incub_idx) > 0) {
           incubation[to_incub_idx] = round(triangle::rtriangle(
             n = length(to_incub_idx),
-            a = 3,
-            b = 9,
-            c = 6
+            a = 1,
+            b = 10,
+            c = 4
           ))
         }
         ## tran_3: from incubation period to symptomatic infection (everyone)
@@ -994,7 +996,7 @@ run_abm_iteration <- function(n_days = 72,
           pull(patid)
         if (length(idx_to_incub) > 0) {
           incubation[idx_to_incub] =
-            round(triangle::rtriangle(n = length(idx_to_incub), a = 3, b = 9, c = 6))
+            round(triangle::rtriangle(n = length(idx_to_incub), a = 1, b = 10, c = 4))
         }
         ## non CDI patients
         ## set probability of noCDI patients to be asymp at first viz
@@ -1176,9 +1178,9 @@ run_abm_iteration <- function(n_days = 72,
       if (length(idx_to_incub) > 0) {
         incubation[idx_to_incub] = round(triangle::rtriangle(
           n = length(idx_to_incub),
-          a = 3,
-          b = 9,
-          c = 6
+          a = 1,
+          b = 10,
+          c = 4
         ))
       }
       ## non CDI patients
@@ -1485,56 +1487,47 @@ run_abm_iteration <- function(n_days = 72,
 
         ## step 9f: update HCW contam based on room contam ############################
         idx_room_contam = (room_list$contam@i + 1)
-        # idx_room_contam = c(4071, 4072, 4075, 4076, 4077, 4079, 4086, 4087, 4088, 4090, 4091)
         hcw_contam_probs = tb_hcw_room_inter |>
-          mutate(prob_hcw_now_contam = if_else(
-            rid_uniq %in% idx_room_contam,
-            (1 - prop_soap_out) * (1 - exp(-total_sec * tau_room_hcw)),
-            0
-          )) |>
-          select(hid_uniq, prob_hcw_now_contam)
-        new_contam_stat = rbinom(
-          n = nrow(hcw_contam_probs),
-          size = 1,
-          prob = hcw_contam_probs$prob_hcw_now_contam
-        )
-        # new_contam_stat = rbinom(n = 35, size = 1, prob = hcw_contam_probs$prob_hcw_now_contam[1:35])
+          mutate(
+            prob_hcw_now_contam = if_else(rid_uniq %in% idx_room_contam, (1 - prop_soap_out) * (1 - exp(-total_sec * tau_room_hcw)), 0)
+          ) |>
+          select(hid_uniq, prob_hcw_now_contam) |>
+          filter(prob_hcw_now_contam > 0) |>
+          group_by(hid_uniq) |>
+          summarise(
+            prob_hcw_not_contam_anyroom = prod(1 - prob_hcw_now_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
+
+        new_contam_stat = rbinom(n = nrow(hcw_contam_probs), size = 1, prob = hcw_contam_probs$prob_c)
         idx_new_contam = hcw_contam_probs$hid_uniq[which(new_contam_stat == 1)]
         hcw_list$contam_next[idx_new_contam] = 1L
-        # hcw_list$contam[idx_new_contam] = 1L
 
         ## step 9g: update HCW disease stat ############################################
         ## HCW disease status updated based on time spent in contam room
-
-        # idx_room_contam # from 9f
-        prob_hcw_asymp = tb_hcw_room_inter |>
+          # idx_room_contam # from 9f
+        hcw_asymp_prob = tb_hcw_room_inter |>
           mutate(
-            prob_hcw_asymp = if_else(
-              rid_uniq %in% idx_room_contam, (1 - exp(-total_sec * tau_room_hcw)), 0)) |>
-          # filter(!is.na(prob_hcw_asymp)) |>
-          select(hid_uniq, prob_hcw_asymp)
+            prob_hcw_asymp_rm = if_else(rid_uniq %in% idx_room_contam, (1 - exp(-total_sec * tau_room_hcw)), 0)
+          ) |>
+          select(hid_uniq, prob_hcw_asymp_rm) |>
+          filter(prob_hcw_asymp_rm > 0) |>
+          group_by(hid_uniq) |>
+          summarise(
+            prob_hcw_not_asymp = prod(1 - prob_hcw_asymp_rm, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          mutate(prob_hcw_asymp = 1 - prob_hcw_not_asymp)
 
-        new_dis_stat = rbinom(
-          n = nrow(prob_hcw_asymp),
-          size = 1,
-          prob = prob_hcw_asymp$prob_hcw_asymp
-        )
-        idx_new_hcw_dis = prob_hcw_asymp$hid_uniq[which(new_dis_stat == 1)]
+        new_dis_stat = rbinom(n = nrow(hcw_asymp_prob), size = 1, prob = hcw_asymp_prob$prob_hcw_asymp)
+        idx_new_hcw_dis = hcw_asymp_prob$hid_uniq[which(new_dis_stat == 1)]
         hcw_list$colonized[idx_new_hcw_dis] = 1L
 
         ## step 9h: update patient disease stat ########################################
         ## patient disease status updated based on time in contam room
-
         pat_idx_in_contam = room_list$occup[idx_room_contam]
-        # if(any(pat_idx_in_contam == 0)) {"should patient indices be zero????"}
         pat_idx_in_contam = pat_idx_in_contam[which(pat_idx_in_contam != 0)]
-        # if_else(rid_uniq %in% idx_room_contam, (1-exp(-total_sec * tau_room_patge65)), 0)
-
-        # prob_pat_latent = (1 - exp(
-        #   -1 *
-        #     pat_list$room_dwell[pat_idx_in_contam] *
-        #     age_lambdas[pat_list$age_cat[pat_idx_in_contam]] * tau_room_patge65
-        #     ))
         prob_pat_latent = (1 - exp(
           -1 * 21600 * ## 21,600 sec in 6 hrs
             age_lambdas[pat_list$age_cat[pat_idx_in_contam]] * tau_room_patge65
@@ -1563,11 +1556,7 @@ run_abm_iteration <- function(n_days = 72,
         idx_new_pat_latent = idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (susceptible@i + 1)]
 
         ## set number of days in incubation period for newly infected patients
-        ## param = prob in binom dist to # days is either = to 2 or 3
-        latent[idx_new_pat_latent] = (rbinom(n = length(idx_new_pat_latent), size = 1, prob = lambda_binom_latent) + 2)
-            ## old: param = lambda in poisson dist
-            # latent[idx_new_pat_latent] = rpois(n = length(idx_new_pat_latent), lambda = lambda_poi_latent)
-        # previously: latent[idx_new_pat_latent] = 3L
+        latent[idx_new_pat_latent] = 2L
         ## new latent period patients are no longer susceptible
         susceptible[idx_new_pat_latent] = 0L
         ### NEED to update/alter this portion, with tau parameter
@@ -1618,9 +1607,27 @@ run_abm_iteration <- function(n_days = 72,
 
       tot_pat_newsymp_day[d] = obs_results$obs_all_symp
 
+      ## calculate prevalence
+      if(d == 32) {
+        obs_results$prev_feb = length(symptomatic@i) / length((pat_list$days_rem)@i)
+      }
+      if(d == 60) {
+        obs_results$prev_mar = length(symptomatic@i) / length((pat_list$days_rem)@i)
+      }
+      if(d == total_days_sim) {
+        obs_results$prop_rm_contam_end = length(room_list$contam@x) / length(room_list$rid_uniq)
+      }
+
     } ## end of day loop
     end_time = Sys.time()
     time_taken = end_time - start_time
     print(time_taken)
-    return(tot_pat_newsymp_day)
+    to_return = list(
+      tot_pat_newsymp_day = tot_pat_newsymp_day,
+      prev_feb = obs_results$prev_feb,
+      prev_mar = obs_results$prev_mar,
+      prop_rm_contam_end = obs_results$prop_rm_contam_end
+    )
+    return(to_return)
+    # return(tot_pat_newsymp_day)
   }
