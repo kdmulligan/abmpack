@@ -51,8 +51,7 @@ run_abm_iteration <- function(n_days = 72,
                               ind_asymp_hcw_trans = 1, ind_recur_trans = 1,
                               ind_transfer_pat_trans = 1, ind_revisit_pat_trans = 1,
                               revisit_n_days = 6, ind_symp_trans = 1, SEED = 1212
-                              )
-{
+                              ) {
   set.seed(SEED)
   ## number of sim days
   total_days_sim = n_days
