@@ -1622,7 +1622,7 @@ run_abm_iteration <- function(n_days = 72,
     time_taken = end_time - start_time
     print(time_taken)
     to_return = list(
-      n_symp_15_72 = tot_pat_newsymp_day[72] - tot_pat_newsymp_day[15],
+      n_symp_15_72 = (tot_pat_newsymp_day[72] - tot_pat_newsymp_day[15]),
       prev_feb = obs_results$prev_feb,
       prev_mar = obs_results$prev_mar,
       prop_rm_contam_end = obs_results$prop_rm_contam_end
