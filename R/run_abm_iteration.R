@@ -46,7 +46,7 @@ utils::globalVariables(
 run_abm_iteration <- function(n_days = 72,
                               t_symp_room = 0.0005, t_hcw_room = 0.0005,
                               t_room_hcw = 0.0005, t_room_patge65 = 0.0005,
-                              t_prob_room_contam_init = 0.005, l_binom_latent = 1,
+                              t_prob_room_contam_init = 0.005,
                               ind_col_pat_trans = 1, ind_asymp_pat_trans = 1,
                               ind_asymp_hcw_trans = 1, ind_recur_trans = 1,
                               ind_transfer_pat_trans = 1, ind_revisit_pat_trans = 1,
@@ -91,9 +91,12 @@ run_abm_iteration <- function(n_days = 72,
     obs_all_symp = 0,
     prev_feb = 0,
     prev_mar = 0,
+    prop_rm_contam_beg = 0,
     prop_rm_contam_end = 0
   )
   tot_pat_newsymp_day = vector(mode = "numeric", length = n_days)
+  daily_prop_hcw_col = vector(mode = "numeric", length = n_days)
+  daily_prop_symp_rm_contam = vector(mode = "numeric", length = n_days)
 
   ## step 0: INITIALIZATION ####################################################
 
@@ -326,6 +329,8 @@ run_abm_iteration <- function(n_days = 72,
   symp_in_hosp_yesterday = symp_in_hosp
   #
   recur_in_hosp_yesterday = c(recur_1_idx, recur_2p_idx)
+
+  obs_results$prop_rm_contam_beg = length(room_list$contam@x) / length(room_list$rid_uniq)
 
   ### start simulation after initalizations
   start_time = Sys.time()
@@ -1462,8 +1467,7 @@ run_abm_iteration <- function(n_days = 72,
           left_join(pat_room_prob_df, join_by(rid_uniq)) |>
           replace_na(list(prob_contam_fr_patdis = 0)) |>
           mutate(
-            prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam
-            )
+            prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)
           ) |>
           # mutate(
           #   contam_fr_hcwdis = rbinom(n = length(prob_room_nocontam_hcw_col), size = 1, prob = (1 - prob_room_nocontam_hcw_col)),
@@ -1538,7 +1542,7 @@ run_abm_iteration <- function(n_days = 72,
         )
         idx_new_pat_latent_temp = pat_idx_in_contam[which(new_latent_stat == 1)]
         ## make sure "new" latent patients are not in other disease states, if so remove
-        length(idx_new_pat_latent_temp)
+        # length(idx_new_pat_latent_temp)
         other_states = c((latent@i + 1),
                          (incubation@i + 1),
                          (asymptomatic@i + 1),
@@ -1546,12 +1550,12 @@ run_abm_iteration <- function(n_days = 72,
                          (clin_res@i + 1),
                          (death@i + 1)
         )
-        which(idx_new_pat_latent_temp %in% other_states) |> length()
-        which(!idx_new_pat_latent_temp %in% other_states) |> length()
-        idx_new_pat_latent_temp[!(idx_new_pat_latent_temp %in% other_states)] |> length()
-        idx_new_pat_latent_temp[which(!idx_new_pat_latent_temp %in% other_states)] |> length()
+        # which(idx_new_pat_latent_temp %in% other_states) |> length()
+        # which(!idx_new_pat_latent_temp %in% other_states) |> length()
+        # idx_new_pat_latent_temp[!(idx_new_pat_latent_temp %in% other_states)] |> length()
+        # idx_new_pat_latent_temp[which(!idx_new_pat_latent_temp %in% other_states)] |> length()
         ## make sure "new" latent patients are in only coming from "susceptible" disease states, if not then remove
-        idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (latent@i + 1)] |> length()
+        # idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (latent@i + 1)] |> length()
         idx_new_pat_latent = idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (susceptible@i + 1)]
 
         ## set number of days in incubation period for newly infected patients
@@ -1563,6 +1567,17 @@ run_abm_iteration <- function(n_days = 72,
         # ## 50/50 if incubation period is 1 or 2 days
         # rbinom(n = 10, size = 1, prob = c(0.5, 0.5)) + 1
         # table(rbinom(n = 100, size = 1, prob = c(0.5, 0.5)) + 1)
+
+        if(tb == 4) {
+          symp_pat_now = (symptomatic@i + 1)
+          symp_pat_in_hosp = symp_pat_now[symp_pat_now %in% (room_list$occup@x)]
+          symp_pat_rooms = room_list$occup@x[room_list$occup@x %in% symp_pat_in_hosp]
+          logic_symp_rm_contam = symp_pat_rooms %in% (room_list$contam@i + 1)
+          ## calc abc stat: daily prop of symp rooms that are contam
+          daily_prop_symp_rm_contam[d] = sum(logic_symp_rm_contam) / length(logic_symp_rm_contam)
+          ## calc abc stat: daily prop hcw col
+          daily_prop_hcw_col[d] = length(hcw_list$colonized@x) / length(hcw_list$hcup_id)
+        }
 
         ## reset contam status for rooms
         idx_room_contam = (room_list$contam_next@i + 1)
@@ -1606,6 +1621,7 @@ run_abm_iteration <- function(n_days = 72,
 
       tot_pat_newsymp_day[d] = obs_results$obs_all_symp
 
+
       ## calculate prevalence
       if(d == 32) {
         obs_results$prev_feb = length(symptomatic@i) / length((pat_list$days_rem)@i)
@@ -1625,7 +1641,10 @@ run_abm_iteration <- function(n_days = 72,
       n_symp_15_72 = (tot_pat_newsymp_day[total_days_sim] - tot_pat_newsymp_day[15]),
       prev_feb = obs_results$prev_feb,
       prev_mar = obs_results$prev_mar,
-      prop_rm_contam_end = obs_results$prop_rm_contam_end
+      prop_rm_contam_beg = (obs_results$prop_rm_contam_beg),
+      prop_rm_contam_end = (obs_results$prop_rm_contam_end),
+      avg_prop_hcw_col = mean(daily_prop_hcw_col[15:total_days_sim]),
+      avg_prop_symp_rm_contam = mean(daily_prop_symp_rm_contam[15:total_days_sim])
     )
     # print(to_return)
     return(to_return)
