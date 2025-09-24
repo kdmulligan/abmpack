@@ -1571,7 +1571,7 @@ run_abm_iteration <- function(n_days = 72,
         if(tb == 4) {
           symp_pat_now = (symptomatic@i + 1)
           symp_pat_in_hosp = symp_pat_now[symp_pat_now %in% (room_list$occup@x)]
-          symp_pat_rooms = room_list$occup@x[room_list$occup@x %in% symp_pat_in_hosp]
+          symp_pat_rooms = (room_list$occup@i + 1)[room_list$occup@x %in% symp_pat_in_hosp]
           logic_symp_rm_contam = symp_pat_rooms %in% (room_list$contam@i + 1)
           ## calc abc stat: daily prop of symp rooms that are contam
           daily_prop_symp_rm_contam[d] = sum(logic_symp_rm_contam) / length(logic_symp_rm_contam)
