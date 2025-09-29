@@ -1558,7 +1558,7 @@ run_abm_iteration_mod <- function(n_days = 72,
       ## set number of days in incubation period for newly infected patients
       latent[idx_new_pat_latent] = 2L
       ## new latent period patients are no longer susceptible
-      susceptible[idx_new_pat_latasent] = 0L
+      susceptible[idx_new_pat_latent] = 0L
       ### NEED to update/alter this portion, with tau parameter
 
       # ## 50/50 if incubation period is 1 or 2 days
