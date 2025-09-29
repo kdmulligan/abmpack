@@ -11,7 +11,6 @@ run_abm_iteration(
   t_room_hcw = 5e-04,
   t_room_patge65 = 5e-04,
   t_prob_room_contam_init = 0.005,
-  l_binom_latent = 1,
   ind_col_pat_trans = 1,
   ind_asymp_pat_trans = 1,
   ind_asymp_hcw_trans = 1,
@@ -36,8 +35,6 @@ run_abm_iteration(
 
 \item{t_prob_room_contam_init}{probability a room is contam prior value}
 
-\item{l_binom_latent}{binomial distribution probability for latent period prior value}
-
 \item{ind_col_pat_trans}{indicator for colonized patient transmission}
 
 \item{ind_asymp_pat_trans}{indicator for asymptomatic patient transmission}
@@ -56,6 +53,8 @@ than or equal to 6. Only important to set if setting \code{ind_revisit_pat_trans
 \item{ind_symp_trans}{indicator for symptomatic patient transmission}
 
 \item{SEED}{seed for the simulation}
+
+\item{l_binom_latent}{binomial distribution probability for latent period prior value}
 }
 \value{
 numeric value with total number of observed cases
