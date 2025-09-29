@@ -18,7 +18,6 @@ utils::globalVariables(
 #' @param t_room_hcw transmission from room to hcw prior value
 #' @param t_room_patge65 transmission from room to patient 65 or older prior value
 #' @param t_prob_room_contam_init probability a room is contam prior value
-#' @param l_binom_latent binomial distribution probability for latent period prior value
 #' @param ind_col_pat_trans indicator for colonized patient transmission
 #' @param ind_asymp_pat_trans indicator for asymptomatic patient transmission
 #' @param ind_asymp_hcw_trans indicator for asymptomatic hcw transmission
