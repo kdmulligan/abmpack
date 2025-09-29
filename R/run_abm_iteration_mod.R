@@ -207,18 +207,6 @@ run_abm_iteration_mod <- function(n_days = 72,
   )
   hcw_colon = which(hcw_colon == 1)
   hcw_list$colonized[hcw_colon] = 1L
-  ## set probability of hcws to be contam upon initialization
-  # tau_prob_room_contam_init = 0.005
-  probs_rm_contam = rtriangle(n = length(hcws$avg_rms_day), a = 0.0176, b = 0.08, c = 0.0489)
-  probs = 1 - (0.16^(hcws$avg_rms_day * probs_rm_contam))
-  hcw_contam = rbinom(n_hcw, size = 1, prob = probs)
-  hcw_contam = which(hcw_contam == 1)
-  # length(hcw_contam) / n_hcw
-  hcw_list$contam[hcw_contam] = 1L
-  ## set probability of rooms contam upon initialization
-  room_contam = rbinom(n = n_rooms, size = 1, prob = rtriangle(n = n_rooms, a = 0.0176, b = 0.08, c = 0.0489))
-  room_contam = which(room_contam == 1)
-  room_list$contam[room_contam] = 1L
 
   ## admit patients in hosp on day 0
   to_admit_df <- hcup |>
@@ -316,6 +304,34 @@ run_abm_iteration_mod <- function(n_days = 72,
   ))
   idx_pat_sus = maybe_asymp_pat[!maybe_asymp_pat %in% idx_pat_asymp]
   susceptible[idx_pat_sus] = 1L
+
+  ################################################ ADDING IN:
+  ## set probability of rooms contam upon initialization, BASED ON disease stat
+  # get room numbers by disease status
+  asymp_pat_rooms = (room_list$occup@i + 1)[room_list$occup@x %in% c(idx_to_incub, idx_pat_asymp)]
+  symp_pat_rooms = (room_list$occup@i + 1)[room_list$occup@x %in% idx_to_symp]
+  susornon_rooms = (room_list$rid_uniq)[!room_list$rid_uniq %in% c(asymp_pat_rooms, symp_pat_rooms)]
+  # update room contam
+  # for asymp
+  new_contam_stat = rbinom(n = length(asymp_pat_rooms), size = 1, prob = 0.0435)
+  idx_new_contam = which(new_contam_stat == 1)
+  room_list$contam[(asymp_pat_rooms[idx_new_contam])] = 1L
+  # for symp
+  new_contam_stat = rbinom(n = length(symp_pat_rooms), size = 1, prob = 0.3667)
+  idx_new_contam = which(new_contam_stat == 1)
+  room_list$contam[(symp_pat_rooms[idx_new_contam])] = 1L
+  # for sus/non-pat
+  new_contam_stat = rbinom(n = length(susornon_rooms), size = 1, prob = 0.0302)
+  idx_new_contam = which(new_contam_stat == 1)
+  room_list$contam[(susornon_rooms[idx_new_contam])] = 1L
+  ## prop of contam rooms
+  prop_contam_rooms = length(room_list$contam@i + 1) / length(room_list$rid_uniq)
+  # set probability of hcws to be contam upon initialization
+  probs = 1 - (0.16^(hcws$avg_rms_day * prop_contam_rooms))
+  hcw_contam = rbinom(n_hcw, size = 1, prob = probs)
+  hcw_contam = which(hcw_contam == 1)
+  hcw_list$contam[hcw_contam] = 1L
+  ##################################
 
   ## first patients that will be discharged
   idx_to_discharge = uniq_pat_dat |> filter(los_rem_frday0 == 0) |> pull(patid)
@@ -1626,6 +1642,9 @@ run_abm_iteration_mod <- function(n_days = 72,
     if(d == 60) {
       obs_results$prev_mar = length(symptomatic@i) / length((pat_list$days_rem)@i)
     }
+    if(d == 15) {
+      obs_results$prop_rm_contam_15 = length(room_list$contam@x) / length(room_list$rid_uniq)
+    }
     if(d == total_days_sim) {
       obs_results$prop_rm_contam_end = length(room_list$contam@x) / length(room_list$rid_uniq)
     }
@@ -1639,6 +1658,7 @@ run_abm_iteration_mod <- function(n_days = 72,
     prev_feb = obs_results$prev_feb,
     prev_mar = obs_results$prev_mar,
     prop_rm_contam_beg = (obs_results$prop_rm_contam_beg),
+    prop_rm_contam_15 = (obs_results$prop_rm_contam_15),
     prop_rm_contam_end = (obs_results$prop_rm_contam_end),
     avg_prop_hcw_col = mean(daily_prop_hcw_col[15:total_days_sim]),
     avg_prop_symp_rm_contam = mean(daily_prop_symp_rm_contam[15:total_days_sim])
