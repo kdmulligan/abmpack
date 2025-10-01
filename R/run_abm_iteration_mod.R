@@ -55,6 +55,7 @@ run_abm_iteration_mod <- function(n_days = 72,
   ## parameter values
   tau_symp_room = t_symp_room
   tau_bn_hcw_room = t_hcw_room
+  # tau_hcw_room = t_hcw_room
   # tau_room_hcw = t_room_hcw
   tau_room_patge65 = t_room_patge65
   # tau_prob_room_contam_init = t_prob_room_contam_init
