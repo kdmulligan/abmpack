@@ -1240,7 +1240,7 @@ run_abm_iteration_mod <- function(n_days = 72,
       cur_room_type = pat_room_type,
       seed = SEED
     )
-    # if(d == 44) {browser()}
+    if(d == 37) {browser()}
     if (length(pat_in_hosp_idx) != length(order_pat_rooms_idx)) {
 
       tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE) |> print(n = 10)
@@ -1257,7 +1257,7 @@ run_abm_iteration_mod <- function(n_days = 72,
     # tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE)
     # tibble(pat = pat_in_hosp_idx) |> count(pat, sort = TRUE)
     # # who doesn't have a room??
-    pat_in_hosp_idx[!pat_in_hosp_idx %in% room_list$occup@x]
+    # pat_in_hosp_idx[!pat_in_hosp_idx %in% room_list$occup@x]
     # ## patients in a room but not in the "patients in hosp index" (should have been discharged)
     # room_list$occup@x[!room_list$occup@x %in% pat_in_hosp_idx]
 
