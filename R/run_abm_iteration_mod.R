@@ -919,7 +919,8 @@ run_abm_iteration_mod <- function(n_days = 72,
         to_admit_pat_7_1 |>
         filter(hcup_id == hcup_id_vec[i]) |>
         arrange(desc(adrgriskmortality)) |>
-        select(patid, adrgriskmortality)
+        select(patid, adrgriskmortality) #|>
+        # mutate(adrgriskmortality = if_else(adrgriskmortality == 0, 1, adrgriskmortality))
       current_icu = icu_avail[[as.character(hcup_id_vec[i])]]
       current_non = non_avail[[as.character(hcup_id_vec[i])]]
       if(nrow(temp_to_admit) > length(current_icu) + length(current_non)){
@@ -1240,7 +1241,7 @@ run_abm_iteration_mod <- function(n_days = 72,
       cur_room_type = pat_room_type,
       seed = SEED
     )
-    if(d == 37) {browser()}
+    # if(d == 37) {browser()}
     if (length(pat_in_hosp_idx) != length(order_pat_rooms_idx)) {
 
       tibble(occup = room_list$occup@x) |> count(occup, sort = TRUE) |> print(n = 10)
