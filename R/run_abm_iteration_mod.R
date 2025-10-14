@@ -350,14 +350,7 @@ run_abm_iteration_mod <- function(n_days = 72,
   start_time = Sys.time()
   for (d in 1:total_days_sim) {
     print(paste0("start of DAY ", d))
-    if(d %in% c(1)) {browser()}
-    # print(c(452, 520, 1440, 2498) %in% room_list$occup@x)
-    #       print(c(452, 520, 1440, 2498) %in% idx_to_discharge)
-    # print(paste0("pat 46184 dis stat: ", which_dis_state(46184)))
-    # print(paste0("patient 55718 state:", which_dis_state(55718)))
-    # print(paste0("patient 55718 days rem: ", pat_list$days_rem[55718]))
-    # print(paste0("patient 55718 in the hospital? ", 55718 %in% room_list$occup@x))
-
+    # if(d %in% c(1)) {browser()}
 
     ## step 1: pat days in disease state ###########################################
     ## update patient days since current disease state
