@@ -139,8 +139,9 @@ run_abm_iteration_mod <- function(n_days = 72,
     risk_mor = Matrix(0L, n_pat, 1),
     viz_key = Matrix(0L, n_pat, 1),
     days_to_next_viz = Matrix(0L, n_pat, 1),
-    viz_num = Matrix(0L, n_pat, 1),
-    new_symp_viz = Matrix(0L, n_pat, 1)
+    revisit_days_since = Matrix(0L, n_pat, 1),
+    viz_num = Matrix(0L, n_pat, 1) #,
+    # new_symp_viz = Matrix(0L, n_pat, 1) # not using for anything
   )
   ge65_uniq_pat_idx = which(pat_list$ge65_flag == 1)
 
@@ -655,11 +656,13 @@ run_abm_iteration_mod <- function(n_days = 72,
     ## remove rest of dynamic vars from discharged pat
     pat_list$los_sim[idx_to_discharge] = 0L
     # pat_list$tran_stat[idx_to_discharge] = 0L
+    pat_list$tran_sub_fac_diff[idx_to_discharge] = 0L
     pat_list$mdc[idx_to_discharge] = 0L
     pat_list$room_dwell[idx_to_discharge] = 0L
     # pat_list$facility[idx_to_discharge] = 0L    # for now, not setting this to zero in order to have facility if viz is constructed for symp CDI
     pat_list$risk_mor[idx_to_discharge] = 0L
-    pat_list$new_symp_viz[idx_to_discharge] = 0L
+    # pat_list$new_symp_viz[idx_to_discharge] = 0L
+    pat_list$revisit_days_since[idx_to_discharge] = 0L
 
     ## remove discharged patients from their rooms
     # room indices where someone is being discharged
@@ -983,7 +986,7 @@ run_abm_iteration_mod <- function(n_days = 72,
       pat_list$risk_mor[idx_new_symp_admit] = 1L # could assign risk differently but
       # ~90% pat are in risk 1-3 so doesn't make a big difference & only
       # using this for assigning icu/non at admission
-      pat_list$new_symp_viz[idx_new_symp_admit] = 1L
+      # pat_list$new_symp_viz[idx_new_symp_admit] = 1L ## not using
     }
 
     ## update disease status for any first time visit patients (from queue)
@@ -1406,19 +1409,19 @@ run_abm_iteration_mod <- function(n_days = 72,
       if (incl_transfer_pat_trans == 0) {
         # exclude transfer patient transmission, remove from idx vectors
         transfers = (pat_list$tran_stat@i[pat_list$tran_stat@x %in% c(2, 3)]) + 1
-        # pat_list$tran_sub_fac_diff
-        # pat_list$tran_days_bn
-        idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% transfers]
-        idx_pat_col = idx_pat_col[!idx_pat_col %in% transfers]
+        tran_in_diff_fac = transfers %in% (pat_list$tran_sub_fac_diff@i + 1)
+        tran_in_diff_fac = transfers[tran_in_diff_fac]
+        idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% tran_in_diff_fac]
+        idx_pat_col = idx_pat_col[!idx_pat_col %in% tran_in_diff_fac]
       }
 
       # RESEARCH Q4
       if(incl_revisit_pat_trans == 0) {
-        # rq_tran_days_bn
-        revisits = which(pat_list$revisit_days_since <= rq_tran_days_bn)
+        # revisit_days_since var is only non-NA if the visit is a true re-visit
+        revisits_idx = (pat_list$revisit_days_since@i + 1)[(pat_list$revisit_days_since@x <= rq_tran_days_bn)]
         ## stop transmission from revisit patients
-        idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% revisits]
-        idx_pat_col = idx_pat_col[!idx_pat_col %in% revisits]
+        idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% revisits_idx]
+        idx_pat_col = idx_pat_col[!idx_pat_col %in% revisits_idx]
       }
 
       # RESEARCH Q5
@@ -1438,7 +1441,6 @@ run_abm_iteration_mod <- function(n_days = 72,
       prob_room_col_pat = rep(1 - exp(-360 * 0.59 * tau_symp_room), times = length(idx_pat_col))
       ## room numbers of symp or colonized patients (need patients in correct room)
       rm_idx_check = c(idx_pat_symp, idx_pat_col) %in% room_list$occup@x
-      # if(sum(rm_idx_check) != length(rm_idx_check)) {print("check if it is correct that not everyone symp/col pat has a room!!")}
 
       pat_room_prob_df =
         tibble(rid_uniq = (room_list$occup@i + 1)[which(room_list$occup@x %in% c(idx_pat_symp, idx_pat_col))],
@@ -1559,12 +1561,6 @@ run_abm_iteration_mod <- function(n_days = 72,
                        (clin_res@i + 1),
                        (death@i + 1)
       )
-      # which(idx_new_pat_latent_temp %in% other_states) |> length()
-      # which(!idx_new_pat_latent_temp %in% other_states) |> length()
-      # idx_new_pat_latent_temp[!(idx_new_pat_latent_temp %in% other_states)] |> length()
-      # idx_new_pat_latent_temp[which(!idx_new_pat_latent_temp %in% other_states)] |> length()
-      ## make sure "new" latent patients are in only coming from "susceptible" disease states, if not then remove
-      # idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (latent@i + 1)] |> length()
       idx_new_pat_latent = idx_new_pat_latent_temp[idx_new_pat_latent_temp %in% (susceptible@i + 1)]
 
       ## set number of days in incubation period for newly infected patients
