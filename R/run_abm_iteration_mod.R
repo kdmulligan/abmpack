@@ -49,6 +49,7 @@ run_abm_iteration_mod <- function(n_days = 72,
                               ind_transfer_pat_trans = 1, ind_revisit_pat_trans = 1,
                               revisit_n_days = 6, ind_symp_trans = 1,
                               daily_rm_clean_cdi_prob = NULL,
+                              prob_wash_in_cdi_rm = NULL, prob_wash_out_cdi_rm = NULL,
                               SEED = 1212
 ) {
   set.seed(SEED)
@@ -77,6 +78,9 @@ run_abm_iteration_mod <- function(n_days = 72,
   incl_symp_trans = ind_symp_trans
   ## RQ 6
   diff_daily_rm_clean_cdi_prob = daily_rm_clean_cdi_prob
+  ## RQ 7
+  set_prob_wash_in = prob_wash_in_cdi_rm
+  set_prob_wash_out = prob_wash_out_cdi_rm
 
   ## create list to hold results
   results = list(
@@ -1455,35 +1459,55 @@ run_abm_iteration_mod <- function(n_days = 72,
         select(-patid)
 
       #9c.3: prob_room_asymp_hcw (MORE COMPLEX b/c mult hcw per room )
-      # idx_hcw_col = (hcw_list$colonized@i + 1) # move earlier with indicators
       idx_hcw_contam = (hcw_list$contam@i + 1)
-      room_contam_probs =
-        tb_hcw_room_inter |>
-        mutate(
-          prob_contam_col = if_else(
-            hid_uniq %in% idx_hcw_col,
-            1 - exp(-total_sec * 0.59 * tau_symp_room),
-            NA
-          ),
-          prob_contam_contam = if_else(
-            hid_uniq %in% idx_hcw_contam,
-            (1 - prop_soap_in) * (1 - exp(-total_sec * tau_bn_hcw_room)),
-            NA
-          )
-        ) |>
-        group_by(rid_uniq) |>
-        summarise(
-          prob_room_nocontam_hcw_col = prod(1 - prob_contam_col, na.rm = TRUE),
-          prob_room_nocontam_hcw_contam = prod(1 - prob_contam_contam, na.rm = TRUE),
-          .groups = "drop"
-        ) |>
-        left_join(pat_room_prob_df, join_by(rid_uniq)) |>
-        replace_na(list(prob_contam_fr_patdis = 0)) |>
-        mutate(
-          prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)
-        ) |>
-        ungroup() |>
-        select(rid_uniq, prob_contam)
+      if(is.null(set_prob_wash_in)) {
+        ## AS-IS
+        room_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_contam_col = if_else(hid_uniq %in% idx_hcw_col, 1 - exp(-total_sec * 0.59 * tau_symp_room), NA),
+            prob_contam_contam = if_else(hid_uniq %in% idx_hcw_contam, (1 - prop_soap_in)*(1-exp(-total_sec * tau_bn_hcw_room)), NA)
+          ) |>
+          group_by(rid_uniq) |>
+          summarise(
+            prob_room_nocontam_hcw_col = prod(1 - prob_contam_col, na.rm = TRUE),
+            prob_room_nocontam_hcw_contam = prod(1 - prob_contam_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          left_join(pat_room_prob_df, join_by(rid_uniq)) |>
+          replace_na(list(prob_contam_fr_patdis = 0)) |>
+          mutate(prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)) |>
+          ungroup() |>
+          select(rid_uniq, prob_contam)
+      } else {
+        ## ADJUST PROB WASH IN FOR CDI ROOMS
+        all_rm_idx = (room_list$occup@i + 1)
+        all_rm_pat = (room_list$occup@x)
+        pat_symp = all_rm_pat[all_rm_pat %in% (symptomatic@i + 1)]
+        idx_rm_symp = all_rm_idx[which(all_rm_pat %in% pat_symp)]
+
+        room_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_contam_col = if_else(hid_uniq %in% idx_hcw_col, 1 - exp(-total_sec * 0.59 * tau_symp_room), NA),
+            prob_contam_contam = case_when(
+              (hid_uniq %in% idx_hcw_contam) & (rid_uniq %in% idx_rm_symp) ~ (1 - set_prob_wash_in)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              (hid_uniq %in% idx_hcw_contam) & (!rid_uniq %in% idx_rm_symp) ~ (1 - prop_soap_in)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              TRUE ~ NA
+            )
+          ) |>
+          group_by(rid_uniq) |>
+          summarise(
+            prob_room_nocontam_hcw_col = prod(1 - prob_contam_col, na.rm = TRUE),
+            prob_room_nocontam_hcw_contam = prod(1 - prob_contam_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          left_join(pat_room_prob_df, join_by(rid_uniq)) |>
+          replace_na(list(prob_contam_fr_patdis = 0)) |>
+          mutate(prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)) |>
+          ungroup() |>
+          select(rid_uniq, prob_contam)
+      }
 
       ## step 9e: update room contam status #########################################
       ## room contam status updated based on 9c & 9d
@@ -1498,19 +1522,48 @@ run_abm_iteration_mod <- function(n_days = 72,
 
       ## step 9f: update HCW contam based on room contam ############################
       idx_room_contam = (room_list$contam@i + 1)
-      hcw_contam_probs = tb_hcw_room_inter |>
-        mutate(
-          prob_hcw_now_contam = if_else(rid_uniq %in% idx_room_contam, (1 - prop_soap_out) * (1 - exp(-total_sec * tau_bn_hcw_room)), 0)
-        ) |>
-        select(hid_uniq, prob_hcw_now_contam) |>
-        filter(prob_hcw_now_contam > 0) |>
-        group_by(hid_uniq) |>
-        summarise(
-          prob_hcw_not_contam_anyroom = prod(1 - prob_hcw_now_contam, na.rm = TRUE),
-          .groups = "drop"
-        ) |>
-        mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
+      if(is.null(set_prob_wash_out)) {
+        ## AS IS
+        hcw_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_hcw_now_contam = if_else(rid_uniq %in% idx_room_contam, (1 - prop_soap_out)*(1-exp(-total_sec * tau_bn_hcw_room)), 0)
+          ) |>
+          select(hid_uniq, prob_hcw_now_contam) |>
+          filter(prob_hcw_now_contam > 0) |>
+          group_by(hid_uniq) |>
+          summarise(
+            prob_hcw_not_contam_anyroom = prod(1 - prob_hcw_now_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
+      } else {
+        ## ADJUST PROB WASH OUT FOR CDI ROOMS
+        all_rm_idx = (room_list$occup@i + 1)
+        all_rm_pat = (room_list$occup@x)
+        pat_symp = all_rm_pat[all_rm_pat %in% (symptomatic@i + 1)]
+        idx_rm_symp = all_rm_idx[which(all_rm_pat %in% pat_symp)]
 
+        hcw_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_hcw_now_contam = case_when(
+              ## symptomatic CDI room
+              (rid_uniq %in% idx_room_contam) & (rid_uniq %in% idx_rm_symp) ~ (1 - set_prob_wash_out)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              ## non-symptomatic room
+              (rid_uniq %in% idx_room_contam) & (!rid_uniq %in% idx_rm_symp) ~ (1 - prop_soap_out)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              TRUE ~ 0
+            )
+          ) |>
+          select(hid_uniq, prob_hcw_now_contam) |>
+          filter(prob_hcw_now_contam > 0) |>
+          group_by(hid_uniq) |>
+          summarise(
+            prob_hcw_not_contam_anyroom = prod(1 - prob_hcw_now_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
+      }
       new_contam_stat = rbinom(n = nrow(hcw_contam_probs), size = 1, prob = hcw_contam_probs$prob_c)
       idx_new_contam = hcw_contam_probs$hid_uniq[which(new_contam_stat == 1)]
       hcw_list$contam_next[idx_new_contam] = 1L
