@@ -76,9 +76,9 @@ run_abm_iteration_mod <- function(n_days = 72,
   rq_tran_days_bn = revisit_n_days          ## transfer def is interviz window of <= 6 days by default
   ## RQ 5
   incl_symp_trans = ind_symp_trans
-  ## RQ 6
+  ## RQ 6: daily cleaning success prob of CDI rooms
   diff_daily_rm_clean_cdi_prob = daily_rm_clean_cdi_prob
-  ## RQ 7
+  ## RQ 7: handwashing w/ CDI rooms
   set_prob_wash_in = prob_wash_in_cdi_rm
   set_prob_wash_out = prob_wash_out_cdi_rm
 
