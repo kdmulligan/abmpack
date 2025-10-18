@@ -47,7 +47,9 @@ run_abm_iteration_mod <- function(n_days = 72,
                               ind_col_pat_trans = 1, ind_asymp_pat_trans = 1,
                               ind_asymp_hcw_trans = 1, ind_recur_trans = 1,
                               ind_transfer_pat_trans = 1, ind_revisit_pat_trans = 1,
-                              revisit_n_days = 6, ind_symp_trans = 1, SEED = 1212
+                              revisit_n_days = 6, ind_symp_trans = 1,
+                              daily_rm_clean_cdi_prob = NULL,
+                              SEED = 1212
 ) {
   set.seed(SEED)
   ## number of sim days
@@ -73,6 +75,8 @@ run_abm_iteration_mod <- function(n_days = 72,
   rq_tran_days_bn = revisit_n_days          ## transfer def is interviz window of <= 6 days by default
   ## RQ 5
   incl_symp_trans = ind_symp_trans
+  ## RQ 6
+  diff_daily_rm_clean_cdi_prob = daily_rm_clean_cdi_prob
 
   ## create list to hold results
   results = list(
@@ -683,8 +687,6 @@ run_abm_iteration_mod <- function(n_days = 72,
     # room indices where rooms are contam
     idx_contam = (room_list$contam@i + 1)[which(room_list$contam@x == 1)]
     if (length(idx_contam) > 0) {
-      # room indices where someone is being discharged ( moved a few lines up)
-      # idx_discharge_rm = (room_list$occup@i + 1)[which(room_list$occup@x %in% idx_to_discharge)]
       # rooms where patient was discharged and the room is contaminated
       idx_term_clean = idx_discharge_rm[idx_discharge_rm %in% idx_contam]
       # reset room contam with terminal clean prob
@@ -697,12 +699,23 @@ run_abm_iteration_mod <- function(n_days = 72,
       # daily cleaning for all other contaminated rooms where patient is still present
       idx_daily = idx_contam[!idx_contam %in% idx_discharge_rm]
       # reset room contam with daily clean prob
-      room_list$contam[idx_daily] =
-        as.integer(rbinom(
-          n = length(idx_daily),
-          size = 1,
-          prob = (1 - 0.22)
-        ))
+      if(is.null(diff_daily_rm_clean_cdi_prob)) {
+        ## this code was previously this section for all daily cleaning
+        room_list$contam[idx_daily] =
+          as.integer(rbinom(n = length(idx_daily), size = 1, prob = (1 - 0.22)))
+      } else {
+        # who is in the rooms to be cleaned with daily cleaning prob
+        pat_idx_daily = room_list$occup[idx_daily]
+        pat_idx_daily_symp = pat_idx_daily[pat_idx_daily %in% (symptomatic@i + 1)]
+        idx_rm_w_symp = idx_daily[which(pat_idx_daily %in% pat_idx_daily_symp)]
+        idx_rm_no_symp = idx_daily[!idx_daily %in% idx_rm_w_symp]
+        ## reset room contam w. daily prob for symp-CDI
+        room_list$contam[idx_rm_w_symp] =
+          as.integer(rbinom(n = length(idx_rm_w_symp), size = 1, prob = (1 - diff_daily_rm_clean_cdi_prob)))
+        ## reset room contam w. daily prob for non-CDI
+        room_list$contam[idx_rm_no_symp] =
+          as.integer(rbinom(n = length(idx_rm_no_symp), size = 1, prob = (1 - 0.22)))
+      }
     }
 
     ## step 7.1: admit patients ######################################################
@@ -1339,27 +1352,16 @@ run_abm_iteration_mod <- function(n_days = 72,
       tb_hcw_room_inter <- vector("list", length(hcup_id_vec))
       names(tb_hcw_room_inter) = hcup_id_vec
       for (f in 1:length(hcup_id_vec)) {
-        # f = 1
         f_rooms = rooms |>
           filter(hcup_id == hcup_id_vec[f]) |>
           select(rid, rid_uniq)
-        ## dim 88 x 4
         df <- hcw_mvts_block |>
           filter(rid %in% f_rooms$rid) |>
           rename(hid_ss = hid) |>
           left_join(f_rooms, join_by(rid)) |>
-          left_join(hcws |> filter(hcup_id == hcup_id_vec[f]),
-                    join_by(hid_ss == hid)) |>
-          # left_join(hcw_lookup |> select(hid, prop_soap_in, prop_soap_out), join_by(hid_ss == hid)) |>
-          select(
-            # rid,
-            rid_uniq,
-            hid_uniq,
-            total_sec,
-            prop_soap_in,
-            prop_soap_out
-          )
-        # df
+          left_join(hcws |> filter(hcup_id == hcup_id_vec[f]), join_by(hid_ss == hid)) |>
+          select(rid_uniq, hid_uniq, total_sec, prop_soap_in, prop_soap_out)
+
         tb_hcw_room_inter[[f]] = df
       }
       tb_hcw_room_inter = bind_rows(tb_hcw_room_inter)
@@ -1480,11 +1482,6 @@ run_abm_iteration_mod <- function(n_days = 72,
         mutate(
           prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)
         ) |>
-        # mutate(
-        #   contam_fr_hcwdis = rbinom(n = length(prob_room_nocontam_hcw_col), size = 1, prob = (1 - prob_room_nocontam_hcw_col)),
-        #   contam_fr_hcwcon = rbinom(n = length(prob_room_nocontam_hcw_contam), size = 1, prob = (1 - prob_room_nocontam_hcw_contam)),
-        #   contam_fr_patdis = rbinom(n = length(prob_contam_fr_patdis), size = 1, prob = prob_contam_fr_patdis)
-        # )
         ungroup() |>
         select(rid_uniq, prob_contam)
 
