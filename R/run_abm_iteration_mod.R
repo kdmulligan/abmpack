@@ -26,6 +26,12 @@ utils::globalVariables(
 #' @param revisit_n_days number of days to consider for a revisit. Must be less
 #' than or equal to 6. Only important to set if setting `ind_revisit_pat_trans` to zero.
 #' @param ind_symp_trans indicator for symptomatic patient transmission
+#' @param daily_rm_clean_cdi_prob alternative daily room cleaning efficacy probability for a CDI room
+#' @param prob_wash_in_cdi_rm alternative hand washing efficacy probability for HCW entering a CDI room
+#' @param prob_wash_out_cdi_rm alternative hand washing efficacy probability for HCW leaving a CDI room
+#' @param daily_rm_clean_any_prob alternative daily room cleaning efficacy probability for a room (CDI or NON)
+#' @param prob_wash_in_any_rm alternative hand washing efficacy probability for HCW entering a room (CDI or NON)
+#' @param prob_wash_out_any_rm alternative hand washing efficacy probability for HCW leaving a room (CDI or NON)
 #' @param SEED seed for the simulation
 #'
 #' @return numeric value with total number of observed cases
@@ -50,6 +56,8 @@ run_abm_iteration_mod <- function(n_days = 72,
                               revisit_n_days = 6, ind_symp_trans = 1,
                               daily_rm_clean_cdi_prob = NULL,
                               prob_wash_in_cdi_rm = NULL, prob_wash_out_cdi_rm = NULL,
+                              daily_rm_clean_any_prob = NULL,
+                              prob_wash_in_any_rm = NULL, prob_wash_out_any_rm = NULL,
                               SEED = 1212
 ) {
   set.seed(SEED)
@@ -77,11 +85,33 @@ run_abm_iteration_mod <- function(n_days = 72,
   ## RQ 5
   incl_symp_trans = ind_symp_trans
   ## RQ 6: daily cleaning success prob of CDI rooms
-  diff_daily_rm_clean_cdi_prob = daily_rm_clean_cdi_prob
-  ## RQ 7: handwashing w/ CDI rooms
-  set_prob_wash_in = prob_wash_in_cdi_rm
-  set_prob_wash_out = prob_wash_out_cdi_rm
-
+  alt_dc_prob = NULL
+  if(!is.null(daily_rm_clean_cdi_prob) & !is.null(daily_rm_clean_any_prob) ) {
+    stop("set an alternative room cleaning probability for either CDI rooms or any rooms, not both")
+  } else if(!is.null(daily_rm_clean_cdi_prob)) {
+    alt_dc_prob = "CDI-only"
+    ## CDI only room
+    diff_daily_rm_clean_prob = daily_rm_clean_cdi_prob
+  } else if (!is.null(daily_rm_clean_any_prob)) {
+    alt_dc_prob = "all-rooms"
+    ## CDI or non-CDI rooms
+    diff_daily_rm_clean_prob = daily_rm_clean_any_prob
+  }
+    ## RQ 7: handwashing w/ CDI rooms
+  alt_hw_prob = NULL
+  if((!is.null(prob_wash_in_cdi_rm) | !is.null(prob_wash_out_cdi_rm)) & (!is.null(prob_wash_in_any_rm) | !is.null(prob_wash_out_any_rm))) {
+    stop("set an alternative hand washing probability for either CDI rooms or any rooms, not both")
+  } else if(!is.null(prob_wash_in_cdi_rm) | !is.null(prob_wash_out_cdi_rm)) {
+    alt_hw_prob = "CDI-only"
+    ## CDI only room
+    set_prob_wash_in = prob_wash_in_cdi_rm
+    set_prob_wash_out = prob_wash_out_cdi_rm
+  } else if (!is.null(prob_wash_in_any_rm) | !is.null(prob_wash_out_any_rm)) {
+    alt_hw_prob = "all-rooms"
+    ## CDI or non-CDI rooms
+    set_prob_wash_in = prob_wash_in_any_rm
+    set_prob_wash_out = prob_wash_out_any_rm
+  }
   ## create list to hold results
   results = list(
     tot_symp_fr_incu = 0,
@@ -558,12 +588,13 @@ run_abm_iteration_mod <- function(n_days = 72,
 
     ## step 3: draw LOS for new symp ###############################################
     ## draw new LOS for patients who moved to symptomatic infection (new symp OR recurr.)
-    # incubation_end is the indices of patients who are just moving to SI
-    # indiced_r is the indices of patients who are moving to recurrent SI
-    if (length(incubation_end) > 0 & (length(clin_res_end) > 0)) {
+      # `clin_res_end` was split into `indices_r` and `indices_sus`
+      # incubation_end is the indices of patients who are just moving to SI
+      # indiced_r is the indices of patients who are moving to recurrent SI
+    if (length(incubation_end) > 0 & (length(indices_r) > 0)) {
       new_los <- rep(NA, length(incubation_end) + length(indices_r))
       idx_now_in_symp = c(incubation_end, indices_r)
-    } else if (length(clin_res_end) > 0) {
+    } else if (length(indices_r) > 0) {
       ## and length(indices_r) > 0
       new_los <- rep(NA, length(indices_r))
       idx_now_in_symp = indices_r
@@ -703,11 +734,12 @@ run_abm_iteration_mod <- function(n_days = 72,
       # daily cleaning for all other contaminated rooms where patient is still present
       idx_daily = idx_contam[!idx_contam %in% idx_discharge_rm]
       # reset room contam with daily clean prob
-      if(is.null(diff_daily_rm_clean_cdi_prob)) {
-        ## this code was previously this section for all daily cleaning
+      if(is.null(alt_dc_prob)) {
+        ## as-is for all daily cleaning
         room_list$contam[idx_daily] =
           as.integer(rbinom(n = length(idx_daily), size = 1, prob = (1 - 0.22)))
-      } else {
+      } else if (alt_dc_prob == "CDI-only") {
+        ## daily cleaning prob altered for CDI-rooms
         # who is in the rooms to be cleaned with daily cleaning prob
         pat_idx_daily = room_list$occup[idx_daily]
         pat_idx_daily_symp = pat_idx_daily[pat_idx_daily %in% (symptomatic@i + 1)]
@@ -715,13 +747,17 @@ run_abm_iteration_mod <- function(n_days = 72,
         idx_rm_no_symp = idx_daily[!idx_daily %in% idx_rm_w_symp]
         ## reset room contam w. daily prob for symp-CDI
         room_list$contam[idx_rm_w_symp] =
-          as.integer(rbinom(n = length(idx_rm_w_symp), size = 1, prob = (1 - diff_daily_rm_clean_cdi_prob)))
+          as.integer(rbinom(n = length(idx_rm_w_symp), size = 1, prob = (1 - diff_daily_rm_clean_prob)))
         ## reset room contam w. daily prob for non-CDI
         room_list$contam[idx_rm_no_symp] =
           as.integer(rbinom(n = length(idx_rm_no_symp), size = 1, prob = (1 - 0.22)))
+
+      } else if (alt_dc_prob == "all-rooms") {
+        ## daily cleaning prob altered for all rooms
+        room_list$contam[idx_daily] =
+          as.integer(rbinom(n = length(idx_daily), size = 1, prob = (1 - diff_daily_rm_clean_prob)))
       }
     }
-
     ## step 7.1: admit patients ######################################################
     ## find all brand new patients with a visit
     ## new hcup patients with at least 1 visit already (inter-viz time is up)
@@ -1440,11 +1476,10 @@ run_abm_iteration_mod <- function(n_days = 72,
       }
 
       #9c.1: prob_room_symp_pat: symptomatic infection
-      # prob_room_symp_pat = 1 - exp(-pat_list$room_dwell[idx_pat_symp] * tau_symp_room)
-      prob_room_symp_pat = rep(1 - exp(-360 * tau_symp_room), time = length(idx_pat_symp))
+        ## room dwell time in seconds: 6hr = 60*60*6 = 21600 seconds
+      prob_room_symp_pat = rep(1 - exp(-21600 * tau_symp_room), time = length(idx_pat_symp))
       #9c.2: prob_room_col_pat: incubation per, clin res, asymp inf
-      # prob_room_col_pat = 1 - exp(-pat_list$room_dwell[idx_pat_col] * 0.59 * tau_symp_room)
-      prob_room_col_pat = rep(1 - exp(-360 * 0.59 * tau_symp_room), times = length(idx_pat_col))
+      prob_room_col_pat = rep(1 - exp(-21600 * 0.59 * tau_symp_room), times = length(idx_pat_col))
       ## room numbers of symp or colonized patients (need patients in correct room)
       rm_idx_check = c(idx_pat_symp, idx_pat_col) %in% room_list$occup@x
 
@@ -1460,13 +1495,13 @@ run_abm_iteration_mod <- function(n_days = 72,
 
       #9c.3: prob_room_asymp_hcw (MORE COMPLEX b/c mult hcw per room )
       idx_hcw_contam = (hcw_list$contam@i + 1)
-      if(is.null(set_prob_wash_in)) {
+      if(is.null(alt_hw_prob)) {
         ## AS-IS
         room_contam_probs =
           tb_hcw_room_inter |>
           mutate(
-            prob_contam_col = if_else(hid_uniq %in% idx_hcw_col, 1 - exp(-total_sec * 0.59 * tau_symp_room), NA),
-            prob_contam_contam = if_else(hid_uniq %in% idx_hcw_contam, (1 - prop_soap_in)*(1-exp(-total_sec * tau_bn_hcw_room)), NA)
+            prob_contam_col = if_else(hid_uniq %in% idx_hcw_col, (1 - prop_soap_in)*(1 - exp(-total_sec * 0.59 * tau_symp_room)), 0),
+            prob_contam_contam = if_else(hid_uniq %in% idx_hcw_contam, (1 - prop_soap_in)*(1-exp(-total_sec * tau_bn_hcw_room)), 0)
           ) |>
           group_by(rid_uniq) |>
           summarise(
@@ -1479,7 +1514,7 @@ run_abm_iteration_mod <- function(n_days = 72,
           mutate(prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)) |>
           ungroup() |>
           select(rid_uniq, prob_contam)
-      } else {
+      } else if (alt_hw_prob == "CDI-only"){
         ## ADJUST PROB WASH IN FOR CDI ROOMS
         all_rm_idx = (room_list$occup@i + 1)
         all_rm_pat = (room_list$occup@x)
@@ -1489,12 +1524,36 @@ run_abm_iteration_mod <- function(n_days = 72,
         room_contam_probs =
           tb_hcw_room_inter |>
           mutate(
-            prob_contam_col = if_else(hid_uniq %in% idx_hcw_col, 1 - exp(-total_sec * 0.59 * tau_symp_room), NA),
+            # prob_contam_col = if_else(hid_uniq %in% idx_hcw_col, (1 - prop_soap_in)*(1 - exp(-total_sec * 0.59 * tau_symp_room)), 0),
+            prob_contam_col = case_when(
+              (hid_uniq %in% idx_hcw_col) & (rid_uniq %in% idx_rm_symp) ~ (1 - set_prob_wash_in)*(1 - exp(-total_sec * 0.59 * tau_symp_room)),
+              (hid_uniq %in% idx_hcw_col) & (!rid_uniq %in% idx_rm_symp) ~ (1 - prop_soap_in)*(1 - exp(-total_sec * 0.59 * tau_symp_room)),
+              TRUE ~ 0
+            ),
             prob_contam_contam = case_when(
               (hid_uniq %in% idx_hcw_contam) & (rid_uniq %in% idx_rm_symp) ~ (1 - set_prob_wash_in)*(1-exp(-total_sec * tau_bn_hcw_room)),
               (hid_uniq %in% idx_hcw_contam) & (!rid_uniq %in% idx_rm_symp) ~ (1 - prop_soap_in)*(1-exp(-total_sec * tau_bn_hcw_room)),
-              TRUE ~ NA
+              TRUE ~ 0
             )
+          ) |>
+          group_by(rid_uniq) |>
+          summarise(
+            prob_room_nocontam_hcw_col = prod(1 - prob_contam_col, na.rm = TRUE),
+            prob_room_nocontam_hcw_contam = prod(1 - prob_contam_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          left_join(pat_room_prob_df, join_by(rid_uniq)) |>
+          replace_na(list(prob_contam_fr_patdis = 0)) |>
+          mutate(prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)) |>
+          ungroup() |>
+          select(rid_uniq, prob_contam)
+      } else if (alt_hw_prob == "all-only") {
+        ## ADJUST PROB WASH IN FOR ALL ROOMS
+        room_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_contam_col = if_else(hid_uniq %in% idx_hcw_col, (1 - set_prob_wash_in)*(1 - exp(-total_sec * 0.59 * tau_symp_room)), 0),
+            prob_contam_contam = if_else(hid_uniq %in% idx_hcw_contam, (1 - set_prob_wash_in)*(1 - exp(-total_sec * tau_bn_hcw_room)), 0)
           ) |>
           group_by(rid_uniq) |>
           summarise(
@@ -1522,7 +1581,7 @@ run_abm_iteration_mod <- function(n_days = 72,
 
       ## step 9f: update HCW contam based on room contam ############################
       idx_room_contam = (room_list$contam@i + 1)
-      if(is.null(set_prob_wash_out)) {
+      if(is.null(alt_hw_prob)) {
         ## AS IS
         hcw_contam_probs =
           tb_hcw_room_inter |>
@@ -1537,7 +1596,7 @@ run_abm_iteration_mod <- function(n_days = 72,
             .groups = "drop"
           ) |>
           mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
-      } else {
+      } else if (alt_hw_prob == "CDI-only") {
         ## ADJUST PROB WASH OUT FOR CDI ROOMS
         all_rm_idx = (room_list$occup@i + 1)
         all_rm_pat = (room_list$occup@x)
@@ -1554,6 +1613,21 @@ run_abm_iteration_mod <- function(n_days = 72,
               (rid_uniq %in% idx_room_contam) & (!rid_uniq %in% idx_rm_symp) ~ (1 - prop_soap_out)*(1-exp(-total_sec * tau_bn_hcw_room)),
               TRUE ~ 0
             )
+          ) |>
+          select(hid_uniq, prob_hcw_now_contam) |>
+          filter(prob_hcw_now_contam > 0) |>
+          group_by(hid_uniq) |>
+          summarise(
+            prob_hcw_not_contam_anyroom = prod(1 - prob_hcw_now_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
+      } else if (alt_hw_prob == "all-only") {
+        ## ADJUST PROB WASH OUT FOR ALL ROOMS
+        hcw_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_hcw_now_contam = if_else(rid_uniq %in% idx_room_contam, (1 - set_prob_wash_out)*(1-exp(-total_sec * tau_bn_hcw_room)), 0)
           ) |>
           select(hid_uniq, prob_hcw_now_contam) |>
           filter(prob_hcw_now_contam > 0) |>
