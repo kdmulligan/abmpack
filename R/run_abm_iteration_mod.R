@@ -591,10 +591,10 @@ run_abm_iteration_mod <- function(n_days = 72,
       # `clin_res_end` was split into `indices_r` and `indices_sus`
       # incubation_end is the indices of patients who are just moving to SI
       # indiced_r is the indices of patients who are moving to recurrent SI
-    if (length(incubation_end) > 0 & (length(indices_r) > 0)) {
+    if (length(incubation_end) > 0 & (length(clin_res_end) > 0)) {
       new_los <- rep(NA, length(incubation_end) + length(indices_r))
       idx_now_in_symp = c(incubation_end, indices_r)
-    } else if (length(indices_r) > 0) {
+    } else if (length(clin_res_end) > 0) {
       ## and length(indices_r) > 0
       new_los <- rep(NA, length(indices_r))
       idx_now_in_symp = indices_r
