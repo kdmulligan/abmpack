@@ -1547,7 +1547,7 @@ run_abm_iteration_mod <- function(n_days = 72,
           mutate(prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)) |>
           ungroup() |>
           select(rid_uniq, prob_contam)
-      } else if (alt_hw_prob == "all-only") {
+      } else if (alt_hw_prob == "all-rooms") {
         ## ADJUST PROB WASH IN FOR ALL ROOMS
         room_contam_probs =
           tb_hcw_room_inter |>
