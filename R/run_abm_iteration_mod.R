@@ -1622,7 +1622,7 @@ run_abm_iteration_mod <- function(n_days = 72,
             .groups = "drop"
           ) |>
           mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
-      } else if (alt_hw_prob == "all-only") {
+      } else if (alt_hw_prob == "all-rooms") {
         ## ADJUST PROB WASH OUT FOR ALL ROOMS
         hcw_contam_probs =
           tb_hcw_room_inter |>
