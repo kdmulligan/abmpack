@@ -29,6 +29,9 @@ utils::globalVariables(
 #' @param daily_rm_clean_cdi_prob alternative daily room cleaning efficacy probability for a CDI room
 #' @param prob_wash_in_cdi_rm alternative hand washing efficacy probability for HCW entering a CDI room
 #' @param prob_wash_out_cdi_rm alternative hand washing efficacy probability for HCW leaving a CDI room
+#' @param daily_rm_clean_asymp_prob alternative daily room cleaning efficacy probability for an asymptomatic CDI room
+#' @param prob_wash_in_asymp_rm alternative hand washing efficacy probability for HCW entering an asymptomatic CDI room
+#' @param prob_wash_out_asymp_rm alternative hand washing efficacy probability for HCW leaving an asymptomatic CDI room
 #' @param daily_rm_clean_any_prob alternative daily room cleaning efficacy probability for a room (CDI or NON)
 #' @param prob_wash_in_any_rm alternative hand washing efficacy probability for HCW entering a room (CDI or NON)
 #' @param prob_wash_out_any_rm alternative hand washing efficacy probability for HCW leaving a room (CDI or NON)
@@ -56,6 +59,8 @@ run_abm_iteration_mod <- function(n_days = 72,
                               revisit_n_days = 6, ind_symp_trans = 1,
                               daily_rm_clean_cdi_prob = NULL,
                               prob_wash_in_cdi_rm = NULL, prob_wash_out_cdi_rm = NULL,
+                              daily_rm_clean_asymp_prob = NULL,
+                              prob_wash_in_asymp_rm = NULL, prob_wash_out_asymp_rm = NULL,
                               daily_rm_clean_any_prob = NULL,
                               prob_wash_in_any_rm = NULL, prob_wash_out_any_rm = NULL,
                               SEED = 1212
@@ -86,8 +91,8 @@ run_abm_iteration_mod <- function(n_days = 72,
   incl_symp_trans = ind_symp_trans
   ## RQ 6: daily cleaning success prob of CDI rooms
   alt_dc_prob = NULL
-  if(!is.null(daily_rm_clean_cdi_prob) & !is.null(daily_rm_clean_any_prob) ) {
-    stop("set an alternative room cleaning probability for either CDI rooms or any rooms, not both")
+  if(sum(c(!is.null(daily_rm_clean_cdi_prob), !is.null(daily_rm_clean_any_prob), !is.null(daily_rm_clean_asymp_prob))) > 1) {
+    stop("set an alternative room cleaning probability for CDI, asymptomatic, or all rooms, not more than 1 type")
   } else if(!is.null(daily_rm_clean_cdi_prob)) {
     alt_dc_prob = "CDI-only"
     ## CDI only room
@@ -96,11 +101,18 @@ run_abm_iteration_mod <- function(n_days = 72,
     alt_dc_prob = "all-rooms"
     ## CDI or non-CDI rooms
     diff_daily_rm_clean_prob = daily_rm_clean_any_prob
+  } else if(!is.null(daily_rm_clean_asymp_prob)) {
+    ## asymptomatic CDI rooms
+    alt_dc_prob = "asymp-rooms"
+    ## CDI or non-CDI rooms
+    diff_daily_rm_clean_prob = daily_rm_clean_asymp_prob
   }
     ## RQ 7: handwashing w/ CDI rooms
   alt_hw_prob = NULL
-  if((!is.null(prob_wash_in_cdi_rm) | !is.null(prob_wash_out_cdi_rm)) & (!is.null(prob_wash_in_any_rm) | !is.null(prob_wash_out_any_rm))) {
-    stop("set an alternative hand washing probability for either CDI rooms or any rooms, not both")
+  if(sum(
+      (!is.null(prob_wash_in_cdi_rm) | !is.null(prob_wash_out_cdi_rm)), (!is.null(prob_wash_in_any_rm) | !is.null(prob_wash_out_any_rm)),
+        (!is.null(prob_wash_in_asymp_rm) | !is.null(prob_wash_out_asymp_rm))) > 1) {
+    stop("set an alternative hand washing probability for CDI, asymptomatic, or all rooms, not more than 1 type")
   } else if(!is.null(prob_wash_in_cdi_rm) | !is.null(prob_wash_out_cdi_rm)) {
     alt_hw_prob = "CDI-only"
     ## CDI only room
@@ -111,6 +123,11 @@ run_abm_iteration_mod <- function(n_days = 72,
     ## CDI or non-CDI rooms
     set_prob_wash_in = prob_wash_in_any_rm
     set_prob_wash_out = prob_wash_out_any_rm
+  } else if (!is.null(prob_wash_in_asymp_rm) | !is.null(prob_wash_out_asymp_rm)) {
+    alt_hw_prob = "asymp-rooms"
+    ## asymp CDI rooms
+    set_prob_wash_in = prob_wash_in_asymp_rm
+    set_prob_wash_out = prob_wash_out_asymp_rm
   }
   ## create list to hold results
   results = list(
@@ -751,6 +768,19 @@ run_abm_iteration_mod <- function(n_days = 72,
         ## reset room contam w. daily prob for non-CDI
         room_list$contam[idx_rm_no_symp] =
           as.integer(rbinom(n = length(idx_rm_no_symp), size = 1, prob = (1 - 0.22)))
+      } else if (alt_dc_prob == "asymp-rooms") {
+        ## daily cleaning prob altered for asymptomatic-rooms
+        # who is in the rooms to be cleaned with daily cleaning prob
+        pat_idx_daily = room_list$occup[idx_daily]
+        pat_idx_daily_asymp = pat_idx_daily[pat_idx_daily %in% (asymptomatic@i + 1)]
+        idx_rm_w_asymp = idx_daily[which(pat_idx_daily %in% pat_idx_daily_asymp)]
+        idx_rm_no_asymp = idx_daily[!idx_daily %in% idx_rm_w_asymp]
+        ## reset room contam w. daily prob for symp-CDI
+        room_list$contam[idx_rm_w_asymp] =
+          as.integer(rbinom(n = length(idx_rm_w_asymp), size = 1, prob = (1 - diff_daily_rm_clean_prob)))
+        ## reset room contam w. daily prob for non-CDI
+        room_list$contam[idx_rm_no_asymp] =
+          as.integer(rbinom(n = length(idx_rm_no_asymp), size = 1, prob = (1 - 0.22)))
 
       } else if (alt_dc_prob == "all-rooms") {
         ## daily cleaning prob altered for all rooms
@@ -1547,6 +1577,38 @@ run_abm_iteration_mod <- function(n_days = 72,
           mutate(prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)) |>
           ungroup() |>
           select(rid_uniq, prob_contam)
+      } else if (alt_hw_prob == "asymp-rooms"){
+        ## ADJUST PROB WASH IN FOR asymptomatic rooms
+        all_rm_idx = (room_list$occup@i + 1)
+        all_rm_pat = (room_list$occup@x)
+        pat_asymp = all_rm_pat[all_rm_pat %in% (asymptomatic@i + 1)]
+        idx_rm_asymp = all_rm_idx[which(all_rm_pat %in% pat_asymp)]
+
+        room_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_contam_col = case_when(
+              (hid_uniq %in% idx_hcw_col) & (rid_uniq %in% idx_rm_asymp) ~ (1 - set_prob_wash_in)*(1 - exp(-total_sec * 0.59 * tau_symp_room)),
+              (hid_uniq %in% idx_hcw_col) & (!rid_uniq %in% idx_rm_asymp) ~ (1 - prop_soap_in)*(1 - exp(-total_sec * 0.59 * tau_symp_room)),
+              TRUE ~ 0
+            ),
+            prob_contam_contam = case_when(
+              (hid_uniq %in% idx_hcw_contam) & (rid_uniq %in% idx_rm_asymp) ~ (1 - set_prob_wash_in)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              (hid_uniq %in% idx_hcw_contam) & (!rid_uniq %in% idx_rm_asymp) ~ (1 - prop_soap_in)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              TRUE ~ 0
+            )
+          ) |>
+          group_by(rid_uniq) |>
+          summarise(
+            prob_room_nocontam_hcw_col = prod(1 - prob_contam_col, na.rm = TRUE),
+            prob_room_nocontam_hcw_contam = prod(1 - prob_contam_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          left_join(pat_room_prob_df, join_by(rid_uniq)) |>
+          replace_na(list(prob_contam_fr_patdis = 0)) |>
+          mutate(prob_contam = 1 - ((1 - prob_contam_fr_patdis) * prob_room_nocontam_hcw_col * prob_room_nocontam_hcw_contam)) |>
+          ungroup() |>
+          select(rid_uniq, prob_contam)
       } else if (alt_hw_prob == "all-rooms") {
         ## ADJUST PROB WASH IN FOR ALL ROOMS
         room_contam_probs =
@@ -1611,6 +1673,32 @@ run_abm_iteration_mod <- function(n_days = 72,
               (rid_uniq %in% idx_room_contam) & (rid_uniq %in% idx_rm_symp) ~ (1 - set_prob_wash_out)*(1-exp(-total_sec * tau_bn_hcw_room)),
               ## non-symptomatic room
               (rid_uniq %in% idx_room_contam) & (!rid_uniq %in% idx_rm_symp) ~ (1 - prop_soap_out)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              TRUE ~ 0
+            )
+          ) |>
+          select(hid_uniq, prob_hcw_now_contam) |>
+          filter(prob_hcw_now_contam > 0) |>
+          group_by(hid_uniq) |>
+          summarise(
+            prob_hcw_not_contam_anyroom = prod(1 - prob_hcw_now_contam, na.rm = TRUE),
+            .groups = "drop"
+          ) |>
+          mutate(prob_c = 1 - prob_hcw_not_contam_anyroom)
+      } else if (alt_hw_prob == "asymp-rooms") {
+        ## ADJUST PROB WASH OUT FOR CDI ROOMS
+        all_rm_idx = (room_list$occup@i + 1)
+        all_rm_pat = (room_list$occup@x)
+        pat_asymp = all_rm_pat[all_rm_pat %in% (asymptomatic@i + 1)]
+        idx_rm_asymp = all_rm_idx[which(all_rm_pat %in% pat_asymp)]
+
+        hcw_contam_probs =
+          tb_hcw_room_inter |>
+          mutate(
+            prob_hcw_now_contam = case_when(
+              ## symptomatic CDI room
+              (rid_uniq %in% idx_room_contam) & (rid_uniq %in% idx_rm_asymp) ~ (1 - set_prob_wash_out)*(1-exp(-total_sec * tau_bn_hcw_room)),
+              ## non-symptomatic room
+              (rid_uniq %in% idx_room_contam) & (!rid_uniq %in% idx_rm_asymp) ~ (1 - prop_soap_out)*(1-exp(-total_sec * tau_bn_hcw_room)),
               TRUE ~ 0
             )
           ) |>
