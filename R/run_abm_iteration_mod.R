@@ -5,7 +5,9 @@ utils::globalVariables(
     "room_type", "hcw_mvts", "day_counter", "rid", "hid", "total_sec", "rid_uniq", "hid_ss",
     "hid_uniq", 'prop_soap_in', "prop_soap_out", "prob_contam_col", "prob_contam_contam",
     "prob_contam_fr_patdis", "prob_room_nocontam_hcw_col", "prob_room_nocontam_hcw_contam",
-    "prob_contam", "prob_hcw_now_contam", "room_list", "hcup_id_vec"
+    "prob_contam", "prob_hcw_now_contam", "room_list", "hcup_id_vec",
+    "susceptible", "latent", "asymptomatic", "incubation",
+    "symptomatic", "clin_res", "death"
   )
 )
 
