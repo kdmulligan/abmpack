@@ -35,6 +35,8 @@ utils::globalVariables(
 #' @param daily_rm_clean_any_prob alternative daily room cleaning efficacy probability for a room (CDI or NON)
 #' @param prob_wash_in_any_rm alternative hand washing efficacy probability for HCW entering a room (CDI or NON)
 #' @param prob_wash_out_any_rm alternative hand washing efficacy probability for HCW leaving a room (CDI or NON)
+#' @param return_add_info indicator for returning additional information in the output, results most applicable when not
+#' altering for any transmission scenarios
 #' @param SEED seed for the simulation
 #'
 #' @return numeric value with total number of observed cases
@@ -63,6 +65,7 @@ run_abm_iteration_mod <- function(n_days = 72,
                               prob_wash_in_asymp_rm = NULL, prob_wash_out_asymp_rm = NULL,
                               daily_rm_clean_any_prob = NULL,
                               prob_wash_in_any_rm = NULL, prob_wash_out_any_rm = NULL,
+                              return_add_info = FALSE,
                               SEED = 1212
 ) {
   set.seed(SEED)
@@ -135,7 +138,16 @@ run_abm_iteration_mod <- function(n_days = 72,
     tot_symp_bc_recur = 0,
     tot_death = 0,
     tot_clres = 0,
-    tot_asymp = 0
+    tot_asymp = 0,
+    hcw_colonized = 0,
+    tot_tran_pat = 0,
+    tot_reviz_pat = 0,
+    tot_symp_tran_pat = 0,
+    tot_symp_reviz_pat = 0,
+    tot_asymp_tran_pat = 0,
+    tot_asymp_reviz_pat = 0,
+    tot_col_tran_pat = 0,
+    tot_col_reviz_pat = 0
   )
   obs_results = list(
     obs_tot_symp = 0,
@@ -150,7 +162,14 @@ run_abm_iteration_mod <- function(n_days = 72,
   tot_pat_newsymp_day = vector(mode = "numeric", length = n_days)
   daily_prop_hcw_col = vector(mode = "numeric", length = n_days)
   daily_prop_symp_rm_contam = vector(mode = "numeric", length = n_days)
-
+  ## used for updating `results` vector
+  idx_hcw_col_today = numeric()
+  tran_symp = numeric()
+  tran_asymp = numeric()
+  tran_col = numeric()
+  reviz_symp = numeric()
+  reviz_asymp = numeric()
+  reviz_col = numeric()
   ## step 0: INITIALIZATION ####################################################
 
   ## tran_seg note: 1 = non_tran, 2 = tran_last, 3 = tran_not_last
@@ -1053,6 +1072,16 @@ run_abm_iteration_mod <- function(n_days = 72,
       filter(!is.na(revisit_days_since))
     pat_list$revisit_days_since[next_viz_dat$patid] = next_viz_dat$revisit_days_since
 
+    ## who are today's new transfer and revisit patients from phase 1 of admits
+    today_tran_pat =
+      to_admit_df |>
+      filter(tran_seg %in% c(2, 3) & fac_diff_flag == 1) |>
+      pull(patid)
+    today_reviz_pat =
+      to_admit_df |>
+      filter(revisit_days_since <= rq_tran_days_bn) |>
+      pull(patid)
+
     # add patient info for newly symp pat admits  (Condition used to be
     # length(idx_symp_pat_nihosp) > 0 will need. Was adjusted here b/c queue
     # needed to include new symp not in hosp)
@@ -1248,6 +1277,21 @@ run_abm_iteration_mod <- function(n_days = 72,
     next_viz_dat = to_admit_df |>
       filter(!is.na(revisit_days_since))
     pat_list$revisit_days_since[next_viz_dat$patid] = next_viz_dat$revisit_days_since
+
+    ## who are today's new transfer and revisit patients from phase 2 of admits (shouldn't be any really)
+    temp_add =
+      to_admit_df |>
+      filter(tran_seg %in% c(2, 3) & fac_diff_flag == 1) |>
+      pull(patid)
+    today_tran_pat = c(today_tran_pat, temp_add)
+    temp_add =
+      to_admit_df |>
+      filter(revisit_days_since <= rq_tran_days_bn) |>
+      pull(patid)
+    today_reviz_pat = c(today_reviz_pat, temp_add)
+    ## update total number of transfer and revisit patients
+    results$tot_tran_pat = results$tot_tran_pat + length(today_tran_pat)
+    results$tot_reviz_pat = results$tot_reviz_pat + length(today_reviz_pat)
 
     ## update disease status for first-visit patients (viz_num = 1)
     ## patients with viz_num > 1 do not get their disease status updated here
@@ -1853,6 +1897,52 @@ run_abm_iteration_mod <- function(n_days = 72,
       obs_results$prop_rm_contam_end = length(room_list$contam@x) / length(room_list$rid_uniq)
     }
 
+    ## number of new HCWs colonized today
+    idx_hcw_col_today = (hcw_list$colonized@i + 1)[!(hcw_list$colonized@i + 1) %in% idx_hcw_col_today]
+    results$hcw_colonized = results$hcw_colonized + length(idx_hcw_col_today)
+
+    # transfer disease statuses
+    any_tran = (pat_list$tran_stat@i[pat_list$tran_stat@x %in% c(2, 3)]) + 1
+    any_tran_diff_fac = any_tran %in% (pat_list$tran_sub_fac_diff@i + 1)
+    any_tran_diff_fac = any_tran[any_tran_diff_fac]
+    tran_dis_stat = which_dis_state(any_tran_diff_fac)
+    ## any current transfer patients that are newly symptomatic
+    tran_symp_yest = tran_symp
+    tran_symp = any_tran_diff_fac[tran_dis_stat == "symp."]
+    tran_symp = tran_symp[!tran_symp %in% tran_symp_yest]
+    ## any current transfer patients that are newly asymptomatic
+    tran_asymp_yest = tran_asymp
+    tran_asymp = any_tran_diff_fac[tran_dis_stat == "asymp."]
+    tran_asymp = tran_asymp[!tran_asymp %in% tran_asymp_yest]
+    ## any current transfer patients that are newly colonized (incubation, clin_res, asymp)
+    tran_col_yest = tran_col
+    tran_col = any_tran_diff_fac[tran_dis_stat %in% c("asymp.", "incub.", "clinres")]
+    tran_col = tran_col[!tran_col %in% tran_col_yest]
+
+    # revisit disease statuses
+    any_reviz = (pat_list$revisit_days_since@i + 1)[(pat_list$revisit_days_since@x <= rq_tran_days_bn)]
+    reviz_dis_stat = which_dis_state(any_reviz)
+    ## any current revisit patients that are newly symptomatic
+    reviz_symp_yest = reviz_symp
+    reviz_symp = any_reviz[reviz_dis_stat == "symp."]
+    reviz_symp = reviz_symp[!reviz_symp %in% reviz_symp_yest]
+    ## any current revisit patients that are newly asymptomatic
+    reviz_asymp_yest = reviz_asymp
+    reviz_asymp = any_reviz[reviz_dis_stat == "asymp."]
+    reviz_asymp = reviz_asymp[!reviz_asymp %in% reviz_asymp_yest]
+    ## any current revisit patients that are newly colonized
+    reviz_col_yest = reviz_col
+    reviz_col = any_reviz[reviz_dis_stat %in% c("asymp.", "incub.", "clinres")]
+    reviz_col = reviz_col[!reviz_col %in% reviz_col_yest]
+
+    ## update results with new cases who are transfers/revisits
+    results$tot_symp_tran_pat = results$tot_symp_tran_pat + length(tran_symp)
+    results$tot_asymp_tran_pat = results$tot_asymp_tran_pat + length(tran_asymp)
+    results$tot_col_tran_pat = results$tot_col_tran_pat + length(tran_col)
+    results$tot_symp_reviz_pat = results$tot_symp_reviz_pat + length(reviz_symp)
+    results$tot_asymp_reviz_pat = results$tot_asymp_reviz_pat + length(reviz_asymp)
+    results$tot_col_reviz_pat = results$tot_col_reviz_pat + length(reviz_col)
+
   } ## end of day loop
   end_time = Sys.time()
   time_taken = end_time - start_time
@@ -1867,7 +1957,13 @@ run_abm_iteration_mod <- function(n_days = 72,
     avg_prop_hcw_col = mean(daily_prop_hcw_col[15:total_days_sim]),
     avg_prop_symp_rm_contam = mean(daily_prop_symp_rm_contam[15:total_days_sim])
   )
-  # print(to_return)
-  return(to_return)
-  # return(tot_pat_newsymp_day)
+  if(return_add_info == TRUE) {
+    to_return = list(
+      to_return,
+      results
+    )
+    return(to_return)
+  } else{
+    return(to_return)
+  }
 }
