@@ -1,6 +1,5 @@
-utils::globalVariables(c("susceptible", "latent", "asymptomatic", "incubation",
-                         "symptomatic", "clin_res", "death"))
-#### function 8: pat_in_one_state()
+utils::globalVariables(
+  c("susceptible", "latent", "asymptomatic", "incubation", "symptomatic", "clin_res", "death"))
 
 #' @title Verify patient(s) in one disease state
 #'
