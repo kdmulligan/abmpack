@@ -1975,7 +1975,7 @@ run_abm_iteration_mod <- function(n_days = 72,
     avg_prop_symp_rm_contam = mean(daily_prop_symp_rm_contam[15:total_days_sim])
   )
   if(return_add_info == TRUE) {
-    to_return = list(
+    to_return = c(
       to_return,
       results
     )
