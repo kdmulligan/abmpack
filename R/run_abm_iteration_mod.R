@@ -1907,34 +1907,49 @@ run_abm_iteration_mod <- function(n_days = 72,
     any_tran = (pat_list$tran_stat@i[pat_list$tran_stat@x %in% c(2, 3)]) + 1
     any_tran_diff_fac = any_tran %in% (pat_list$tran_sub_fac_diff@i + 1)
     any_tran_diff_fac = any_tran[any_tran_diff_fac]
-    tran_dis_stat = which_dis_state(any_tran_diff_fac)
+      # tran_dis_stat = which_dis_state(any_tran_diff_fac)
+
     ## any current transfer patients that are newly symptomatic
     tran_symp_yest = tran_symp
-    tran_symp = any_tran_diff_fac[tran_dis_stat == "symp."]
+      # tran_symp = any_tran_diff_fac[tran_dis_stat == "symp."]
+    tran_symp = any_tran_diff_fac[any_tran_diff_fac %in% (symptomatic@i + 1)]
     tran_symp = tran_symp[!tran_symp %in% tran_symp_yest]
     ## any current transfer patients that are newly asymptomatic
     tran_asymp_yest = tran_asymp
-    tran_asymp = any_tran_diff_fac[tran_dis_stat == "asymp."]
+      # tran_asymp = any_tran_diff_fac[tran_dis_stat == "asymp."]
+    tran_asymp = any_tran_diff_fac[any_tran_diff_fac %in% (asymptomatic@i + 1)]
     tran_asymp = tran_asymp[!tran_asymp %in% tran_asymp_yest]
     ## any current transfer patients that are newly colonized (incubation, clin_res, asymp)
     tran_col_yest = tran_col
-    tran_col = any_tran_diff_fac[tran_dis_stat %in% c("asymp.", "incub.", "clinres")]
+      # tran_col = any_tran_diff_fac[tran_dis_stat %in% c("asymp.", "incub.", "clinres")]
+    tran_col = c(
+      any_tran_diff_fac[any_tran_diff_fac %in% (asymptomatic@i + 1)],
+      any_tran_diff_fac[any_tran_diff_fac %in% (incubation@i + 1)],
+      any_tran_diff_fac[any_tran_diff_fac %in% (clin_res@i + 1)]
+      )
     tran_col = tran_col[!tran_col %in% tran_col_yest]
 
     # revisit disease statuses
     any_reviz = (pat_list$revisit_days_since@i + 1)[(pat_list$revisit_days_since@x <= rq_tran_days_bn)]
-    reviz_dis_stat = which_dis_state(any_reviz)
+      # reviz_dis_stat = which_dis_state(any_reviz)
     ## any current revisit patients that are newly symptomatic
     reviz_symp_yest = reviz_symp
-    reviz_symp = any_reviz[reviz_dis_stat == "symp."]
+      # reviz_symp = any_reviz[reviz_dis_stat == "symp."]
+    reviz_symp = any_reviz[any_reviz %in% (symptomatic@i + 1)]
     reviz_symp = reviz_symp[!reviz_symp %in% reviz_symp_yest]
     ## any current revisit patients that are newly asymptomatic
     reviz_asymp_yest = reviz_asymp
-    reviz_asymp = any_reviz[reviz_dis_stat == "asymp."]
+      # reviz_asymp = any_reviz[reviz_dis_stat == "asymp."]
+    reviz_asymp = any_reviz[any_reviz %in% (asymptomatic@i + 1)]
     reviz_asymp = reviz_asymp[!reviz_asymp %in% reviz_asymp_yest]
     ## any current revisit patients that are newly colonized
     reviz_col_yest = reviz_col
-    reviz_col = any_reviz[reviz_dis_stat %in% c("asymp.", "incub.", "clinres")]
+      # reviz_col = any_reviz[reviz_dis_stat %in% c("asymp.", "incub.", "clinres")]
+    reviz_col = c(
+      any_reviz[any_reviz %in% (asymptomatic@i + 1)],
+      any_reviz[any_reviz %in% (incubation@i + 1)],
+      any_reviz[any_reviz %in% (clin_res@i + 1)]
+    )
     reviz_col = reviz_col[!reviz_col %in% reviz_col_yest]
 
     ## update results with new cases who are transfers/revisits
