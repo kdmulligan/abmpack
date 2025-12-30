@@ -149,7 +149,8 @@ run_abm_iteration_mod <- function(n_days = 72,
     tot_asymp_tran_pat = 0,
     tot_asymp_reviz_pat = 0,
     tot_col_tran_pat = 0,
-    tot_col_reviz_pat = 0
+    tot_col_reviz_pat = 0,
+    pats_admit = 0
   )
   obs_results = list(
     obs_tot_symp = 0,
@@ -1010,6 +1011,7 @@ run_abm_iteration_mod <- function(n_days = 72,
     to_admit_pat_7_1 =
       to_admit_pat_7_1 |>
       filter(!patid %in% leave_in_queue)
+    results$pats_admit = results$pats_admit + nrow(to_admit_pat_7_1)
     # print(paste0("dim admit pat df after: ", dim(to_admit_pat_7_1)))
     # 7d.3: assign rooms for patients from 7a, 7b, 7c
     new_rooms <- vector("list", length(hcup_id_vec))
@@ -1230,6 +1232,7 @@ run_abm_iteration_mod <- function(n_days = 72,
     to_admit_df =
       to_admit_df |>
       filter(!viz_key %in% queue_viz_keys_df$viz_key)
+    results$pats_admit = results$pats_admit + nrow(to_admit_df)
     # 7e.3: new hcup pat - assign rooms & admit patients
     # assign rooms
     new_rooms <- vector("list", length(hcup_id_vec))
