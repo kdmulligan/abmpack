@@ -25,6 +25,10 @@ utils::globalVariables(
 #' @param ind_recur_trans indicator for recurrent patient transmission
 #' @param ind_transfer_pat_trans indicator for transfer patient transmission
 #' @param ind_revisit_pat_trans indicator for revisit patient tranmission
+#' @param elim_symp_transfer_pat_trans eliminate transmission from symptomatic transfer patients, set to zero
+#' @param elim_symp_reviz_pat_trans eliminate transmission from symptomatic revisit patients, set to zero
+#' @param elim_asymp_transfer_pat_trans eliminate transmission from asymptomatic transfer patients, set to zero
+#' @param elim_asymp_reviz_pat_trans eliminate transmission from asymptomatic revisit patients, set to zero
 #' @param revisit_n_days number of days to consider for a revisit. Must be less
 #' than or equal to 6. Only important to set if setting `ind_revisit_pat_trans` to zero.
 #' @param ind_symp_trans indicator for symptomatic patient transmission
@@ -60,6 +64,8 @@ run_abm_iteration_mod <- function(n_days = 72,
                               ind_col_pat_trans = 1, ind_asymp_pat_trans = 1,
                               ind_asymp_hcw_trans = 1, ind_recur_trans = 1,
                               ind_transfer_pat_trans = 1, ind_revisit_pat_trans = 1,
+                              elim_symp_transfer_pat_trans = 1, elim_symp_reviz_pat_trans = 1,
+                              elim_asymp_transfer_pat_trans = 1, elim_asymp_reviz_pat_trans = 1,
                               revisit_n_days = 6, ind_symp_trans = 1,
                               daily_rm_clean_cdi_prob = NULL,
                               prob_wash_in_cdi_rm = NULL, prob_wash_out_cdi_rm = NULL,
@@ -1529,11 +1535,28 @@ run_abm_iteration_mod <- function(n_days = 72,
       # no change to idx_pat_symp & idx_pat_col vectors
       if (incl_transfer_pat_trans == 0) {
         # exclude transfer patient transmission, remove from idx vectors
+          ## includes symp and colonized (asymp, incuba, clin res)
         transfers = (pat_list$tran_stat@i[pat_list$tran_stat@x %in% c(2, 3)]) + 1
         tran_in_diff_fac = transfers %in% (pat_list$tran_sub_fac_diff@i + 1)
         tran_in_diff_fac = transfers[tran_in_diff_fac]
         idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% tran_in_diff_fac]
         idx_pat_col = idx_pat_col[!idx_pat_col %in% tran_in_diff_fac]
+      }
+      if (elim_symp_transfer_pat_trans == 0) {
+        ## eliminate transmission from symptomatic transfer patients
+        transfers = (pat_list$tran_stat@i[pat_list$tran_stat@x %in% c(2, 3)]) + 1
+        tran_in_diff_fac = transfers %in% (pat_list$tran_sub_fac_diff@i + 1)
+        tran_in_diff_fac = transfers[tran_in_diff_fac]
+        idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% tran_in_diff_fac]
+      }
+      if (elim_asymp_transfer_pat_trans == 0){
+        ## eliminate transmission from asymptomatic-only transfer patients
+        transfers = (pat_list$tran_stat@i[pat_list$tran_stat@x %in% c(2, 3)]) + 1
+        tran_in_diff_fac = transfers %in% (pat_list$tran_sub_fac_diff@i + 1)
+        tran_in_diff_fac = transfers[tran_in_diff_fac]
+        asymp_pat = (asymptomatic@i + 1)
+        asymp_pat = asymp_pat[!asymp_pat %in% tran_in_diff_fac]
+        idx_pat_col = idx_pat_col[!idx_pat_col %in% asymp_pat]
       }
 
       # RESEARCH Q4
@@ -1543,6 +1566,18 @@ run_abm_iteration_mod <- function(n_days = 72,
         ## stop transmission from revisit patients
         idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% revisits_idx]
         idx_pat_col = idx_pat_col[!idx_pat_col %in% revisits_idx]
+      }
+      if (elim_symp_reviz_pat_trans == 0) {
+        ## eliminate transmission from symptomatic reviz patients
+        revisits_idx = (pat_list$revisit_days_since@i + 1)[(pat_list$revisit_days_since@x <= rq_tran_days_bn)]
+        idx_pat_symp = idx_pat_symp[!idx_pat_symp %in% revisits_idx]
+      }
+      if (elim_asymp_reviz_pat_trans == 0){
+        ## eliminate transmission from asymptomatic-only reviz patients
+        revisits_idx = (pat_list$revisit_days_since@i + 1)[(pat_list$revisit_days_since@x <= rq_tran_days_bn)]
+        asymp_pat = (asymptomatic@i + 1)
+        asymp_pat = asymp_pat[!asymp_pat %in% revisits_idx]
+        idx_pat_col = idx_pat_col[!idx_pat_col %in% asymp_pat]
       }
 
       # RESEARCH Q5
